@@ -27,7 +27,7 @@ int main() {
             printf("%d\n", plus(a, b));//Ochirsuren//
         }
         else if (c == '-') {
-            printf("%d\n", minus(a, b));
+            printf("%d\n", minus(a, b)); // 유은제(Agname47)
         }
         else if (c == '*') {
             printf("%d\n", time(a, b));
