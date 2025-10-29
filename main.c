@@ -30,7 +30,7 @@ int main() {
             printf("%d\n", minus(a, b)); // 유은제(Agname47)
         }
         else if (c == '*') {
-            printf("%d\n", time(a, b));
+            printf("%d\n", time(a, b)); //임채민
         }
         else if (c == '/') {
             printf("%d\n", divided(a, b));
