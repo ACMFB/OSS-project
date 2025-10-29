@@ -33,7 +33,7 @@ int main() {
             printf("%d\n", time(a, b)); //임채민
         }
         else if (c == '/') {
-            printf("%d\n", divided(a, b));//DINH VAN TUAN KHANH//
+            printf("%d\n", divided(a, b));//DINHVANTUANKHANH//
         }
         printf("\n");
     }
