@@ -24,7 +24,7 @@ int main() {
         scanf_s(" %c", &c);
 
         if (c == '+') {
-            printf("%d\n", plus(a, b));
+            printf("%d\n", plus(a, b));//Ochirsuren//
         }
         else if (c == '-') {
             printf("%d\n", minus(a, b));
