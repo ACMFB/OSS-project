@@ -1,16 +1,20 @@
 package com.example.hangeulstudy
 
+import android.graphics.Color
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.hangeulstudy.databinding.ActivityMainBinding
 import com.example.hangeulstudy.Word
 import com.example.hangeulstudy.GPTRepository
 import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.UUID
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
@@ -27,7 +31,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         tts = TextToSpeech(this, this) // TTS 초기화
 
-        binding.btnSpeak.isEnabled = false // 초기에 버튼 비활성화
+        // 버튼 초기 상태 설정 (비활성화, 회색)
+        setSpeakButtonEnabled(false)
 
         fetchNewWord()
 
@@ -49,12 +54,44 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 Log.e("TTS", "The Language specified is not supported!")
                 Toast.makeText(this, "한국어 음성 데이터가 없습니다.", Toast.LENGTH_SHORT).show()
             } else {
-                binding.btnSpeak.isEnabled = true // TTS 준비 완료, 버튼 활성화
+                // TTS 준비 완료, 버튼 활성화 (초록색)
+                setSpeakButtonEnabled(true)
                 isTtsReady = true
+                // TTS 재생 상태를 감지하는 리스너 설정
+                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {
+                        // 음성 출력이 시작되면 버튼 비활성화 (회색)
+                        runOnUiThread {
+                            setSpeakButtonEnabled(false)
+                        }
+                    }
+
+                    override fun onDone(utteranceId: String?) {
+                        // 음성 출력이 끝나면 버튼 활성화 (초록색)
+                        runOnUiThread {
+                            setSpeakButtonEnabled(true)
+                        }
+                    }
+
+                    override fun onError(utteranceId: String?) {
+                        // 오류 발생 시 버튼 활성화 (초록색)
+                        runOnUiThread {
+                            setSpeakButtonEnabled(true)
+                        }
+                    }
+                })
             }
         } else {
             Log.e("TTS", "Initialization Failed!")
         }
+    }
+
+    private fun setSpeakButtonEnabled(isEnabled: Boolean) {
+        binding.btnSpeak.isEnabled = isEnabled
+        val color = if (isEnabled) Color.parseColor("#4CAF50") else Color.GRAY
+        val drawable = DrawableCompat.wrap(binding.btnSpeak.drawable)
+        DrawableCompat.setTint(drawable, color)
+        binding.btnSpeak.setImageDrawable(drawable)
     }
 
     private fun speakOut() {
@@ -65,7 +102,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val text = binding.txtKorean.text.toString()
         // 생성 중... 또는 오류 메시지는 읽지 않도록 처리
         if (text.isNotEmpty() && text != "생성 중..." && text != "오류") {
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+            // 각 음성 출력에 고유 ID 부여
+            val utteranceId = UUID.randomUUID().toString()
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
         }
     }
 
