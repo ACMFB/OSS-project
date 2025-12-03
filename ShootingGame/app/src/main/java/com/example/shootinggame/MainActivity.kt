@@ -5,11 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,16 +27,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -61,13 +71,65 @@ class MainActivity : ComponentActivity() {
 }
 
 val juaFontFamily = FontFamily(Font(R.font.shooting_jua, FontWeight.Normal)) // 폰트 설정
-val keywordList = listOf("사과", "바나나", "딸기", "포도", "오렌지", "수박", "레몬", "파인애플") // 임시 제시어 리스트
+val keywordList = listOf( // 제시어 리스트
+    "평범한", "웃는", "실망한", "놀란", "졸린", "즐거운", "큰", "작은",
+    "빨강색", "주황색", "노랑색", "초록색", "파랑색", "검은색", "하양색", "분홍색"
+)
 val keywordResetTime: Long = 10000L // 제시어 변경 주기 설정 (밀리초)
 val playerMaxHp: Int = 10 // 플레이어 최대 체력 설정
+val playerShootTime: Long = 250L // 플레이어 레이저 발사 쿨타임 설정 (밀리초)
+
+
+
+interface GameEntity { // 엔티티들이 가질 기본 속성
+    val x: Float
+    val y: Float
+    val width: Float
+    val height: Float
+    val isAlive: Boolean
+    fun bounds(): Rect = Rect(x, y, x + width, y + height)
+}
+
+data class Player( // 플레이어 엔티티
+    override val x: Float,
+    override val y: Float,
+    override val width: Float = 100f, // 임시 크기
+    override val height: Float = 100f,
+    var health: Int = 3,
+    override val isAlive: Boolean = true
+) : GameEntity
+
+data class Laser( // 레이저 엔티티
+    override val x: Float = 0f,
+    override val y: Float = 0f,
+    override val width: Float = 10f, // 임시 크기
+    override val height: Float = 30f,
+    val speed: Float = 15f, // 레이저 이동 속도
+    override val isAlive: Boolean = true
+) : GameEntity
+
+data class GameState( // 엔티티들의 상태를 저장
+    val player: Player,
+    val lasers: List<Laser>,
+    val enemies: List<GameEntity> = emptyList(), // 미구현
+    val enemyBullets: List<GameEntity> = emptyList() // 미구현
+)
 
 @Composable
 fun ShootingGame(name: String, modifier: Modifier = Modifier) {
-    var pauseCheck by remember { mutableStateOf(false) } // 일시정지 상태 체크용 변수
+    var isInitialized by remember { mutableStateOf(false) } // 상태 초기화 여부 저장
+    var screenBounds by remember { mutableStateOf(IntSize.Zero) } // 화면 크기 저장
+    val density = LocalDensity.current.density // Dp와 Px의 전환을 위한 밀도 정보 저장
+    var gameState by remember { // 엔티티 상태 변화 저장
+        mutableStateOf(
+            GameState(
+                player = Player(x = 0f, y = 0f),
+                lasers = emptyList()
+            )
+        )
+    }
+
+    var pauseCheck by remember { mutableStateOf(false) } // 일시정지 상태 체크
     var currentScore by remember { mutableStateOf(0) }
     var currentKeyword by remember { mutableStateOf("") }
     var playerHp by remember { mutableStateOf(playerMaxHp) }
@@ -91,8 +153,150 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
         onQuitToggle = { pauseCheck = !pauseCheck } // 나중에 게임 종료 코드로 바꾸기
     )
 
+    GameLoop(
+        gameState = gameState,
+        onUpdateState = { newState -> gameState = newState },
+        screenBounds = screenBounds,
+        playerShootTime = playerShootTime
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged { size ->
+                screenBounds = size
+                if (!isInitialized && size != IntSize.Zero) {
+                    gameState = gameState.copy(
+                        player = gameState.player.copy( // 플레이어 초기 위치 설정
+                            x = (size.width - gameState.player.width * density) / 2f,
+                            y = size.height - gameState.player.height * density - 50.dp.toPx(density)
+                        )
+                    )
+                    isInitialized = true
+                }
+            }
+            .pointerInput(Unit) { // 플레이어 드래그 이동
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    val newX = gameState.player.x + dragAmount.x
+                    val newY = gameState.player.y + dragAmount.y
+                    val maxX = screenBounds.width - gameState.player.width * density // 화면 경계 체크
+                    val maxY = screenBounds.height - gameState.player.height * density
+
+                    gameState = gameState.copy(
+                        player = gameState.player.copy(
+                            x = newX.coerceIn(0f, maxX),
+                            y = newY.coerceIn(0f, maxY)
+                        )
+                    )
+                }
+            }
+    ) {
+        PlayerView(gameState.player) // 플레이어 렌더링
+        gameState.lasers.forEach { laser -> // 레이저 렌더링
+            LaserView(laser)
+        }
+    }
+
     // 플레이어 출현 함수
     // 랜덤 확률 -> 시간 따라 적 생성 함수로 전달
+}
+
+fun Dp.toPx(density: Float): Float = this.value * density // Dp를 Px로 변환
+fun Float.toDp(density: Float): Dp = Dp(this / density) // Px를 Dp로 변환
+
+@Composable
+fun GameLoop(
+    gameState: GameState,
+    onUpdateState: (GameState) -> Unit,
+    screenBounds: IntSize,
+    playerShootTime: Long
+) {
+    val currentGameState by rememberUpdatedState(gameState)
+    val updateState by rememberUpdatedState(onUpdateState)
+
+    var lastFireTime by remember { mutableStateOf(0L) } // 타이머
+    val density = LocalDensity.current.density
+    val screenHeight = screenBounds.height.toFloat()
+
+    LaunchedEffect(true) {
+        while (true) {
+            val currentTime = System.currentTimeMillis()
+            var newState = currentGameState.copy()
+
+            if (currentTime - lastFireTime >= playerShootTime && newState.player.isAlive) { // 레이저 발사
+                val player = newState.player
+                val laserX = player.x + player.width * density / 2f - Laser().width * density / 2f // 플레이어 앞에 생성
+                val laserY = player.y - Laser().height * density
+
+                val newLaser = Laser(
+                    x = laserX,
+                    y = laserY,
+                    width = Laser().width * density,
+                    height = Laser().height * density
+                )
+
+                newState = newState.copy(lasers = newState.lasers + newLaser)
+                lastFireTime = currentTime
+            }
+
+            val updatedLasers = newState.lasers.mapNotNull { laser ->
+                val newY = laser.y - laser.speed // 레이저 이동
+
+                // 화면 끝(Y <= 0)에 닿으면 소멸
+                if (newY < 0) {
+                    null // 리스트에서 제거
+                } else {
+                    // TODO: 레이저와 적 충돌 감지 추가
+
+                    laser.copy(y = newY)
+                }
+            }
+
+            // TODO: 플레이어와 적 및 적 탄환 충돌 감지와 체력 감소 추가
+
+            newState = newState.copy(lasers = updatedLasers)
+
+            updateState(newState)
+            delay(16)
+        }
+    }
+}
+
+@Composable
+fun PlayerView(player: Player) {
+    val density = LocalDensity.current.density
+    if (player.isAlive) {
+        Image(
+            painter = painterResource(id = R.drawable.shooting_player),
+            contentDescription = "Player Ship",
+            modifier = Modifier
+                .absoluteOffset {
+                    IntOffset(
+                        x = player.x.toInt(),
+                        y = player.y.toInt()
+                    )
+                }
+                .size(player.width.toDp(density), player.height.toDp(density))
+        )
+    }
+}
+
+@Composable
+fun LaserView(laser: Laser) {
+    val density = LocalDensity.current.density
+    Image(
+        painter = painterResource(id = R.drawable.shooting_player_bullet),
+        contentDescription = "Laser",
+        modifier = Modifier
+            .absoluteOffset {
+                IntOffset(
+                    x = laser.x.toInt(),
+                    y = laser.y.toInt()
+                )
+            }
+            .size(laser.width.toDp(density), laser.height.toDp(density))
+    )
 }
 
 @Composable
