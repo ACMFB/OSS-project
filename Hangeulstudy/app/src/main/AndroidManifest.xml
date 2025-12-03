@@ -28,6 +28,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".FavoritesActivity"
+            android:label="내 단어장"
+            android:parentActivityName=".MainActivity" />
+
     </application>
 
 </manifest>
