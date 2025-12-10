@@ -1,6 +1,7 @@
 package com.example.shootinggame
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -123,7 +124,7 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
     var gameState by remember { // 엔티티 상태 변화 저장
         mutableStateOf(
             GameState(
-                player = Player(x = 0f, y = 0f),
+                player = Player(x = 260.0f, y = 836.0f), // TODO: 플레이어 초기 생성 위치가 0, 0으로 고정되는 문제 발생하여 일단 임의로 설정함.
                 lasers = emptyList()
             )
         )
@@ -144,20 +145,20 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
         onKeywordSelected = onKeywordSelected
     )
 
-    CreateInterface( // 인터페이스 표시
-        pauseCheck = pauseCheck,
-        currentScore = currentScore,
-        playerHp = playerHp,
-        currentKeyword = currentKeyword,
-        onPauseToggle = { pauseCheck = !pauseCheck },
-        onQuitToggle = { pauseCheck = !pauseCheck } // 나중에 게임 종료 코드로 바꾸기
+    val backgroundGif = R.drawable.shooting_background // 배경 이미지 설정
+    var gifLoadingComplete by remember { mutableStateOf(false) } // gif 로딩 확인용 변수
+
+    BackgroundLoop( // 배경 gif 재생
+        gifImage = backgroundGif,
+        onLoadingComplete = { success -> gifLoadingComplete = success }
     )
 
     GameLoop(
         gameState = gameState,
         onUpdateState = { newState -> gameState = newState },
         screenBounds = screenBounds,
-        playerShootTime = playerShootTime
+        playerShootTime = playerShootTime,
+        pauseCheck = pauseCheck
     )
 
     Box(
@@ -175,8 +176,10 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
                     isInitialized = true
                 }
             }
-            .pointerInput(Unit) { // 플레이어 드래그 이동
+            .pointerInput(Unit, pauseCheck) { // 플레이어 드래그 이동
                 detectDragGestures { change, dragAmount ->
+                    if (pauseCheck) return@detectDragGestures // 일시정지 시 안움직이게
+
                     change.consume()
                     val newX = gameState.player.x + dragAmount.x
                     val newY = gameState.player.y + dragAmount.y
@@ -192,14 +195,23 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
                 }
             }
     ) {
-        PlayerView(gameState.player) // 플레이어 렌더링
-        gameState.lasers.forEach { laser -> // 레이저 렌더링
-            LaserView(laser)
+        if (isInitialized) {
+            PlayerView(gameState.player) // 플레이어 렌더링
+            gameState.lasers.forEach { laser -> // 레이저 렌더링
+                LaserView(laser)
+            }
         }
-    }
 
-    // 플레이어 출현 함수
-    // 랜덤 확률 -> 시간 따라 적 생성 함수로 전달
+        CreateInterface( // 인터페이스 표시
+            pauseCheck = pauseCheck,
+            gifLoadingComplete = gifLoadingComplete,
+            currentScore = currentScore,
+            playerHp = playerHp,
+            currentKeyword = currentKeyword,
+            onPauseToggle = { pauseCheck = !pauseCheck },
+            onQuitToggle = { pauseCheck = !pauseCheck } // TODO: 나중에 게임 종료 코드로 바꾸기
+        )
+    }
 }
 
 fun Dp.toPx(density: Float): Float = this.value * density // Dp를 Px로 변환
@@ -210,7 +222,8 @@ fun GameLoop(
     gameState: GameState,
     onUpdateState: (GameState) -> Unit,
     screenBounds: IntSize,
-    playerShootTime: Long
+    playerShootTime: Long,
+    pauseCheck: Boolean
 ) {
     val currentGameState by rememberUpdatedState(gameState)
     val updateState by rememberUpdatedState(onUpdateState)
@@ -219,46 +232,55 @@ fun GameLoop(
     val density = LocalDensity.current.density
     val screenHeight = screenBounds.height.toFloat()
 
-    LaunchedEffect(true) {
-        while (true) {
-            val currentTime = System.currentTimeMillis()
-            var newState = currentGameState.copy()
+    LaunchedEffect(pauseCheck) {
+        if (!pauseCheck) { // 일시정지 시에만 레이저 이동
+            while (isActive) {
+                val currentTime = System.currentTimeMillis()
+                var newState = currentGameState.copy()
 
-            if (currentTime - lastFireTime >= playerShootTime && newState.player.isAlive) { // 레이저 발사
-                val player = newState.player
-                val laserX = player.x + player.width * density / 2f - Laser().width * density / 2f // 플레이어 앞에 생성
-                val laserY = player.y - Laser().height * density
+                if (currentTime - lastFireTime >= playerShootTime && newState.player.isAlive) { // 레이저 발사 위치 계산
+                    val player = newState.player
 
-                val newLaser = Laser(
-                    x = laserX,
-                    y = laserY,
-                    width = Laser().width * density,
-                    height = Laser().height * density
-                )
+                    val playerWidthPx = player.width * density
+                    val laserWidthPx = Laser().width * density
 
-                newState = newState.copy(lasers = newState.lasers + newLaser)
-                lastFireTime = currentTime
-            }
+                    val centerCorrection = (playerWidthPx / 2f) - (laserWidthPx / 2f)
+                    val horizontalOffset = 47.5f // 레이저 발사 위치 오프셋
 
-            val updatedLasers = newState.lasers.mapNotNull { laser ->
-                val newY = laser.y - laser.speed // 레이저 이동
+                    val laserX = player.x + centerCorrection - horizontalOffset
+                    val laserY = player.y - Laser().height * density // 플레이어 앞에 생성
 
-                // 화면 끝(Y <= 0)에 닿으면 소멸
-                if (newY < 0) {
-                    null // 리스트에서 제거
-                } else {
-                    // TODO: 레이저와 적 충돌 감지 추가
+                    val newLaser = Laser(
+                        x = laserX,
+                        y = laserY,
+                        width = laserWidthPx,
+                        height = Laser().height * density
+                    )
 
-                    laser.copy(y = newY)
+                    newState = newState.copy(lasers = newState.lasers + newLaser)
+                    lastFireTime = currentTime
                 }
+
+                val updatedLasers = newState.lasers.mapNotNull { laser ->
+                    val newY = laser.y - laser.speed // 레이저 이동
+
+                    // 화면 끝(Y <= 0)에 닿으면 소멸
+                    if (newY < 0) {
+                        null // 리스트에서 제거
+                    } else {
+                        // TODO: 레이저와 적 충돌 감지 추가
+
+                        laser.copy(y = newY)
+                    }
+                }
+
+                // TODO: 플레이어와 적 및 적 탄환 충돌 감지와 체력 감소 추가
+
+                newState = newState.copy(lasers = updatedLasers)
+
+                updateState(newState)
+                delay(16)
             }
-
-            // TODO: 플레이어와 적 및 적 탄환 충돌 감지와 체력 감소 추가
-
-            newState = newState.copy(lasers = updatedLasers)
-
-            updateState(newState)
-            delay(16)
         }
     }
 }
@@ -319,24 +341,17 @@ fun RandomKeyword(
 @Composable
 fun CreateInterface( // 배경 재생, 일시정지 기능 구현, 스코어 및 플레이어 체력 표시, 제시어 표시
     pauseCheck: Boolean,
+    gifLoadingComplete: Boolean,
     currentScore: Int,
     playerHp: Int,
     currentKeyword: String,
     onPauseToggle: () -> Unit,
     onQuitToggle: () -> Unit
 ) {
-    val backgroundGif = R.drawable.shooting_background // 이미지 설정들
-    val pauseImage = painterResource(R.drawable.shooting_pause)
+    val pauseImage = painterResource(R.drawable.shooting_pause) // 이미지 설정들
     val pauseBackgroundImage = painterResource(R.drawable.shooting_pause_background)
     val resumeImage = painterResource(R.drawable.shooting_resume_button)
     val quitImage = painterResource(R.drawable.shooting_quit_button)
-
-    var gifLoadingComplete by remember { mutableStateOf(false) } // gif 로딩 확인용 변수
-
-    BackgroundLoop( // 배경 gif 재생
-        gifImage = backgroundGif,
-        onLoadingComplete = { success -> gifLoadingComplete = success }
-    )
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -403,7 +418,7 @@ fun CreateInterface( // 배경 재생, 일시정지 기능 구현, 스코어 및
                 )
             }
         } else { // gif 배경 로딩 실패 시
-            // 에러 띄우고 게임 종료
+            // TODO: 에러 띄우고 게임 종료
         }
     }
 }
