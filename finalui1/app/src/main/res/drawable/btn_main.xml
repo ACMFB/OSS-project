@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 버튼 배경색 -->
+    <solid android:color="#FFF8EE"/>
+
+    <!-- 테두리 (경계선) -->
+    <stroke
+        android:width="2dp"
+        android:color="#F2C28B"/>
+
+    <!-- 둥근 모서리 -->
+    <corners android:radius="28dp"/>
+
+</shape>
