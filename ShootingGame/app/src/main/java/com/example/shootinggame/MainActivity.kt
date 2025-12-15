@@ -87,6 +87,7 @@ val enemyShootTime: Long = 2000L // 적 탄환 발사 시간
 val enemyMoveSpeed: Float = 3f // 적 이동 속도
 val enemyBulletSize: Float = 15f // 적 탄환 크기
 val enemyBulletSpeed: Float = 8f // 적 탄환 속도
+val scoreValue: Int = 100 // 스코어 증가량
 
 interface GameEntity { // 엔티티들이 가질 기본 속성
     val x: Float
@@ -107,7 +108,7 @@ data class Player( // 플레이어 엔티티
     override val y: Float,
     override val width: Float = playerSize,
     override val height: Float = playerSize,
-    var health: Int = 3,
+    var health: Int = playerMaxHp,
     override val isAlive: Boolean = true
 ) : GameEntity
 
@@ -168,7 +169,7 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
     var pauseCheck by remember { mutableStateOf(false) } // 일시정지 상태 체크
     var currentScore by remember { mutableStateOf(0) }
     var currentKeyword by remember { mutableStateOf("") }
-    var playerHp by remember { mutableStateOf(playerMaxHp) }
+    val displayPlayerHp = gameState.player.health
 
     val onKeywordSelected: (String) -> Unit = { newKeyword -> // RandomKeyword() 함수의 콜백으로 받은 스트링을 키워드로 저장
         currentKeyword = newKeyword
@@ -233,13 +234,19 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
             }
         }
 
+        val onUpdateScore: (Int) -> Unit = { newScore ->
+            currentScore = newScore
+        }
+
         GameLoop(
             gameState = gameState,
             onUpdateState = { newState -> gameState = newState },
-            screenWidthPx = screenWidthPx, // 🎯 NEW: Px 값 전달
-            screenHeightPx = screenHeightPx, // 🎯 NEW: Px 값 전달
+            screenWidthPx = screenWidthPx,
+            screenHeightPx = screenHeightPx,
             playerShootTime = playerShootTime,
-            pauseCheck = pauseCheck
+            pauseCheck = pauseCheck,
+            currentScore = currentScore,
+            onUpdateScore = onUpdateScore
         )
 
         if (isInitialized) {
@@ -262,7 +269,7 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
             pauseCheck = pauseCheck,
             gifLoadingComplete = gifLoadingComplete,
             currentScore = currentScore,
-            playerHp = playerHp,
+            playerHp = displayPlayerHp,
             currentKeyword = currentKeyword,
             onPauseToggle = { pauseCheck = !pauseCheck },
             onQuitToggle = { pauseCheck = !pauseCheck } // TODO: 나중에 게임 종료 코드로 바꾸기
@@ -280,10 +287,15 @@ fun GameLoop(
     screenWidthPx: Float,
     screenHeightPx: Float,
     playerShootTime: Long,
-    pauseCheck: Boolean
+    pauseCheck: Boolean,
+    currentScore: Int,
+    onUpdateScore: (Int) -> Unit
 ) {
     val currentGameState by rememberUpdatedState(gameState)
     val updateState by rememberUpdatedState(onUpdateState)
+
+    val latestScore = rememberUpdatedState(currentScore)
+    val updateScore = rememberUpdatedState(onUpdateScore)
 
     var lastFireTime by remember { mutableStateOf(0L) } // 플레이어 레이저 타이머
     val density = LocalDensity.current.density
@@ -295,7 +307,7 @@ fun GameLoop(
     val enemyBulletWidthPx = enemyBulletSize * density
     val enemyBulletHeightPx = enemyBulletSize * density
 
-    val playerLaserOffsetPx = 23.5f * density // 플레이어 레이저 오프셋을 픽셀 단위로 미리 계산
+    val playerLaserOffsetPx = 24.5f * density // 플레이어 레이저 오프셋을 픽셀 단위로 미리 계산
 
     val randomGenerator = remember { Random(System.currentTimeMillis()) }
 
@@ -415,6 +427,8 @@ fun GameLoop(
                 var playerHealth = player.health
                 val playerBounds = player.bounds()
 
+                var newScore = latestScore.value
+
                 // 레이저와 적 충돌
                 val lasersToRemove = mutableSetOf<Laser>()
 
@@ -431,10 +445,11 @@ fun GameLoop(
 
                             // 적 체력 감소
                             val newHealth = updatedEnemy.health - 1
-                            updatedEnemy = if (newHealth <= 0) {
-                                updatedEnemy.copy(health = 0, isAlive = false) // 사망 처리
+                            if (newHealth <= 0) {
+                                newScore += scoreValue
+                                updatedEnemy = updatedEnemy.copy(health = 0, isAlive = false) // 사망 처리
                             } else {
-                                updatedEnemy.copy(health = newHealth)
+                                updatedEnemy = updatedEnemy.copy(health = newHealth)
                             }
                         }
                     }
@@ -457,6 +472,7 @@ fun GameLoop(
                 // 플레이어와 적 본체 충돌
                 currentEnemies.removeAll { enemy ->
                     if (playerBounds.overlaps(enemy.bounds())) {
+                        newScore += scoreValue
                         playerHealth-- // 플레이어 체력 감소
                         true // 적 제거
                     } else {
@@ -470,7 +486,7 @@ fun GameLoop(
                     enemies = currentEnemies.filter { it.isAlive }, // 체력 0 이하로 떨어진 적 제거
                     enemyBullets = currentEnemyBullets
                 )
-
+                updateScore.value(newScore)
                 updateState(newState)
                 delay(16)
             }
