@@ -78,14 +78,16 @@ val keywordMap = mapOf( // 제시어 리스트
 )
 val keywordList = keywordMap.keys.toList()
 val enemyCodeList = keywordMap.values.toList()
-val keywordResetTime: Long = 10000L // 제시어 변경 주기 설정 (밀리초)
+val keywordResetTime: Long = 7500L // 제시어 변경 주기 설정 (밀리초)
 val playerSize: Float = 100f // 플레이어 크기
 val playerMaxHp: Int = 10 // 플레이어 최대 체력 설정
 val playerShootTime: Long = 250L // 플레이어 레이저 발사 쿨타임 설정 (밀리초)
 val laserWidth: Float = 10f // 레이저 크기
 val laserHeight: Float = 30f
 val enemySize: Float = 100f // 적 크기
-val enemySpawnTime: Long = 75000L // 적 출현 시간
+val initialEnemySpawnTime: Long = 10000L // 초기 적 출현 시간
+val minSpawnTime: Long = 1000L // 최소 적 출현 시간
+val spawnTimeDecreaseRate: Long = 1 // 적 출현 시간 감소 비율
 val enemyShootTime: Long = 2000L // 적 탄환 발사 시간
 val enemyMoveSpeed: Float = 5f // 적 이동 속도
 val enemyBulletSize: Float = 15f // 적 탄환 크기
@@ -175,7 +177,6 @@ fun ShootingGame(
     var pauseCheck by remember { mutableStateOf(false) } // 일시정지 상태 체크
     var currentScore by remember { mutableStateOf(0) }
     var currentKeyword by remember { mutableStateOf("") }
-    val displayPlayerHp = gameState.player.health
 
     var playerHealth by remember { mutableStateOf(playerMaxHp) }
     val isGameOver = playerHealth <= 0
@@ -418,8 +419,11 @@ fun GameLoop(
                 val player = newState.player
                 var currentPlayerHealth = latestHealth.value
 
+                val scoreDecrease = latestScore.value / spawnTimeDecreaseRate
+                val newSpawnTime = (initialEnemySpawnTime - scoreDecrease).coerceAtLeast(minSpawnTime)
+
                 // 적 생성
-                if (currentTime - lastEnemySpawnTime >= enemySpawnTime) {
+                if (currentTime - lastEnemySpawnTime >= newSpawnTime) {
                     val maxX = screenWidthPx - enemyWidthPx
                     val validatedMaxX = if (maxX < 0) 0f else maxX
                     val randomX = randomGenerator.nextFloat() * validatedMaxX
@@ -532,7 +536,6 @@ fun GameLoop(
                 var currentLasers = newState.lasers.toMutableList()
                 var currentEnemies = newState.enemies.toMutableList()
                 var currentEnemyBullets = newState.enemyBullets.toMutableList()
-                var playerHealth = player.health
                 val playerBounds = player.bounds()
 
                 var newScore = latestScore.value
@@ -799,8 +802,6 @@ fun CreateInterface( // 배경 재생, 일시정지 기능 구현, 스코어 및
                     onQuitClicked = onQuitToggle
                 )
             }
-        } else { // gif 배경 로딩 실패 시
-            // TODO: 에러 띄우고 게임 종료
         }
     }
 }
