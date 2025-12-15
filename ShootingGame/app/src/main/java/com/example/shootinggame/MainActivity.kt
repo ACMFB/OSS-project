@@ -153,7 +153,6 @@ data class GameState( // 엔티티들의 상태를 저장
 @Composable
 fun ShootingGame(name: String, modifier: Modifier = Modifier) {
     var isInitialized by remember { mutableStateOf(false) } // 상태 초기화 여부 저장
-    var screenBounds by remember { mutableStateOf(IntSize.Zero) } // 화면 크기 저장
     val density = LocalDensity.current.density // Dp와 Px의 전환을 위한 밀도 정보 저장
     var gameState by remember { // 엔티티 상태 변화 저장
         mutableStateOf(
@@ -189,48 +188,60 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
         onLoadingComplete = { success -> gifLoadingComplete = success }
     )
 
-    GameLoop(
-        gameState = gameState,
-        onUpdateState = { newState -> gameState = newState },
-        screenBounds = screenBounds,
-        playerShootTime = playerShootTime,
-        pauseCheck = pauseCheck
-    )
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .onSizeChanged { size ->
-                screenBounds = size
-                if (!isInitialized && size != IntSize.Zero) {
-                    gameState = gameState.copy(
-                        player = gameState.player.copy( // 플레이어 초기 위치 설정
-                            x = (size.width - gameState.player.width * density) / 2f,
-                            y = size.height - gameState.player.height * density - 50.dp.toPx(density)
-                        )
-                    )
-                    isInitialized = true
-                }
-            }
             .pointerInput(Unit, pauseCheck) { // 플레이어 드래그 이동
+                val playerWidthPx = playerSize * density
+                val playerHeightPx = playerSize * density
+
                 detectDragGestures { change, dragAmount ->
-                    if (pauseCheck) return@detectDragGestures // 일시정지 시 안움직이게
+                    if (pauseCheck) return@detectDragGestures
 
                     change.consume()
                     val newX = gameState.player.x + dragAmount.x
                     val newY = gameState.player.y + dragAmount.y
-                    val maxX = screenBounds.width - gameState.player.width * density // 화면 경계 체크
-                    val maxY = screenBounds.height - gameState.player.height * density
+
+                    val maxX = size.width - (playerWidthPx / 2f)
+                    val maxY = size.height - playerHeightPx
 
                     gameState = gameState.copy(
                         player = gameState.player.copy(
-                            x = newX.coerceIn(0f, maxX),
-                            y = newY.coerceIn(0f, maxY)
+                            x = newX.coerceIn(0f, maxX.toFloat()),
+                            y = newY.coerceIn(0f, maxY.toFloat())
                         )
                     )
                 }
             }
     ) {
+        val screenWidthPx = constraints.maxWidth.toFloat()
+        val screenHeightPx = constraints.maxHeight.toFloat()
+
+        LaunchedEffect(screenWidthPx, screenHeightPx) {
+            if (!isInitialized) {
+                val playerWidthPx = playerSize * density
+                val playerHeightPx = playerSize * density
+                val bottomPaddingPx = 50.dp.toPx(density)
+
+                val initialX = (screenWidthPx - playerWidthPx) / 2f
+                val initialY = screenHeightPx - playerHeightPx - bottomPaddingPx
+
+                gameState = gameState.copy(
+                    player = gameState.player.copy(x = initialX, y = initialY)
+                )
+                isInitialized = true
+            }
+        }
+
+        GameLoop(
+            gameState = gameState,
+            onUpdateState = { newState -> gameState = newState },
+            screenWidthPx = screenWidthPx, // 🎯 NEW: Px 값 전달
+            screenHeightPx = screenHeightPx, // 🎯 NEW: Px 값 전달
+            playerShootTime = playerShootTime,
+            pauseCheck = pauseCheck
+        )
+
         if (isInitialized) {
             PlayerView(gameState.player) // 플레이어 렌더링
 
@@ -266,7 +277,8 @@ fun Float.toDp(density: Float): Dp = Dp(this / density) // Px를 Dp로 변환
 fun GameLoop(
     gameState: GameState,
     onUpdateState: (GameState) -> Unit,
-    screenBounds: IntSize,
+    screenWidthPx: Float,
+    screenHeightPx: Float,
     playerShootTime: Long,
     pauseCheck: Boolean
 ) {
@@ -275,22 +287,21 @@ fun GameLoop(
 
     var lastFireTime by remember { mutableStateOf(0L) } // 플레이어 레이저 타이머
     val density = LocalDensity.current.density
-    val screenHeight = screenBounds.height.toFloat()
+
+    val halfScreenY = screenHeightPx / 2f
 
     val enemyWidthPx = enemySize * density
     val enemyHeightPx = enemySize * density
     val enemyBulletWidthPx = enemyBulletSize * density
     val enemyBulletHeightPx = enemyBulletSize * density
 
-    val playerLaserOffsetPx = 47.5f * density // 플레이어 레이저 오프셋을 픽셀 단위로 미리 계산
+    val playerLaserOffsetPx = 23.5f * density // 플레이어 레이저 오프셋을 픽셀 단위로 미리 계산
 
     val randomGenerator = remember { Random(System.currentTimeMillis()) }
 
     LaunchedEffect(pauseCheck) {
         if (!pauseCheck) { // 일시정지 상태가 아닐 때만 실행
             var lastEnemySpawnTime = System.currentTimeMillis() // 적 생성 타이머
-            val screenWidth = screenBounds.width.toFloat()
-            val halfScreenY = screenHeight / 2f
 
             while (isActive) {
                 val currentTime = System.currentTimeMillis()
@@ -299,10 +310,13 @@ fun GameLoop(
 
                 // 적 생성
                 if (currentTime - lastEnemySpawnTime >= enemySpawnTime) {
-                    val maxX = screenWidth - enemyWidthPx
-                    val randomX = randomGenerator.nextFloat() * maxX
+                    val maxX = screenWidthPx - enemyWidthPx
+                    val validatedMaxX = if (maxX < 0) 0f else maxX
+                    val randomX = randomGenerator.nextFloat() * validatedMaxX
                     val maxTargetY = halfScreenY - enemyHeightPx
-                    val randomTargetY = randomGenerator.nextFloat() * maxTargetY
+                    val minTargetY = 100.dp.toPx(density)
+                    val rangeY = maxTargetY - minTargetY
+                    val randomTargetY = if (rangeY <= 0) minTargetY else randomGenerator.nextFloat() * rangeY + minTargetY
 
                     val newEnemy = Enemy(
                         x = randomX, y = -enemyHeightPx, targetY = randomTargetY,
@@ -379,7 +393,11 @@ fun GameLoop(
                 val enemyBulletsAfterMove = newState.enemyBullets.mapNotNull { bullet ->
                     val newX = bullet.x + bullet.velX
                     val newY = bullet.y + bullet.velY
-                    val outOfBounds = newX < -bullet.width || newX > screenWidth || newY < -bullet.height || newY > screenHeight
+                    val outOfBounds =
+                        newX < -bullet.width ||
+                                newX > screenWidthPx ||
+                                newY < -bullet.height ||
+                                newY > screenHeightPx
                     bullet.takeIf { !outOfBounds }?.copy(x = newX, y = newY)
                 }
 
