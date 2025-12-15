@@ -71,10 +71,16 @@ class MainActivity : ComponentActivity() {
 }
 
 val juaFontFamily = FontFamily(Font(R.font.shooting_jua, FontWeight.Normal)) // 폰트 설정
-val keywordList = listOf( // 제시어 리스트
-    "평범한", "웃는", "실망한", "놀란", "졸린", "즐거운", "큰", "작은",
-    "빨강색", "주황색", "노랑색", "초록색", "파랑색", "검은색", "하양색", "분홍색"
+
+val keywordMap = mapOf( // 제시어 리스트
+    "평범한" to "default", "웃는" to "smile", "실망한" to "disappointed",
+    "놀란" to "surprised", "졸린" to "sleepy", "즐거운" to "happy",
+    "빨강색" to "red", "주황색" to "orange", "노랑색" to "yellow",
+    "초록색" to "green", "파랑색" to "blue", "검은색" to "black",
+    "하양색" to "white", "분홍색" to "pink"
 )
+val keywordList = keywordMap.keys.toList()
+val enemyCodeList = keywordMap.values.toList()
 val keywordResetTime: Long = 10000L // 제시어 변경 주기 설정 (밀리초)
 val playerSize: Float = 100f // 플레이어 크기
 val playerMaxHp: Int = 10 // 플레이어 최대 체력 설정
@@ -84,7 +90,7 @@ val laserHeight: Float = 30f
 val enemySize: Float = 100f // 적 크기
 val enemySpawnTime: Long = 10000L // 적 출현 시간
 val enemyShootTime: Long = 2000L // 적 탄환 발사 시간
-val enemyMoveSpeed: Float = 3f // 적 이동 속도
+val enemyMoveSpeed: Float = 5f // 적 이동 속도
 val enemyBulletSize: Float = 15f // 적 탄환 크기
 val enemyBulletSpeed: Float = 8f // 적 탄환 속도
 val scoreValue: Int = 100 // 스코어 증가량
@@ -130,7 +136,8 @@ data class Enemy(
     override val isAlive: Boolean = true,
     val targetY: Float, // 멈춰야 할 최종 y 위치
     val isMoving: Boolean = true, // 이동 중인지 체크
-    var lastShotTime: Long = 0L // 마지막 탄환 발사 시간
+    var lastShotTime: Long = 0L, // 마지막 탄환 발사 시간
+    val keyword: String
 ) : GameEntity
 
 data class EnemyBullet(
@@ -246,7 +253,8 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
             playerShootTime = playerShootTime,
             pauseCheck = pauseCheck,
             currentScore = currentScore,
-            onUpdateScore = onUpdateScore
+            onUpdateScore = onUpdateScore,
+            currentKeyword = currentKeyword
         )
 
         if (isInitialized) {
@@ -289,10 +297,13 @@ fun GameLoop(
     playerShootTime: Long,
     pauseCheck: Boolean,
     currentScore: Int,
-    onUpdateScore: (Int) -> Unit
+    onUpdateScore: (Int) -> Unit,
+    currentKeyword: String
 ) {
     val currentGameState by rememberUpdatedState(gameState)
     val updateState by rememberUpdatedState(onUpdateState)
+
+    val latestKeyword = rememberUpdatedState(currentKeyword)
 
     val latestScore = rememberUpdatedState(currentScore)
     val updateScore = rememberUpdatedState(onUpdateScore)
@@ -330,9 +341,15 @@ fun GameLoop(
                     val rangeY = maxTargetY - minTargetY
                     val randomTargetY = if (rangeY <= 0) minTargetY else randomGenerator.nextFloat() * rangeY + minTargetY
 
+                    val enemyCode = enemyCodeList.random()
+
                     val newEnemy = Enemy(
-                        x = randomX, y = -enemyHeightPx, targetY = randomTargetY,
-                        width = enemyWidthPx, height = enemyHeightPx
+                        x = randomX,
+                        y = -enemyHeightPx,
+                        targetY = randomTargetY,
+                        width = enemyWidthPx,
+                        height = enemyHeightPx,
+                        keyword = enemyCode
                     )
                     newState = newState.copy(enemies = newState.enemies + newEnemy)
                     lastEnemySpawnTime = currentTime
@@ -386,8 +403,12 @@ fun GameLoop(
                         val bulletY = enemyCenterY - enemyBulletHeightPx / 2f
 
                         val newBullet = EnemyBullet(
-                            x = bulletX, y = bulletY, velX = velX, velY = velY,
-                            width = enemyBulletWidthPx, height = enemyBulletHeightPx
+                            x = bulletX,
+                            y = bulletY,
+                            velX = velX,
+                            velY = velY,
+                            width = enemyBulletWidthPx,
+                            height = enemyBulletHeightPx
                         )
                         newEnemyBullets.add(newBullet) // 새 탄환 리스트에 추가
                         currentEnemy = currentEnemy.copy(lastShotTime = currentTime)
@@ -446,7 +467,10 @@ fun GameLoop(
                             // 적 체력 감소
                             val newHealth = updatedEnemy.health - 1
                             if (newHealth <= 0) {
-                                newScore += scoreValue
+                                val requiredEnemyCode = keywordMap[latestKeyword.value] // 제시어 비교
+                                val scoreMultiplier = if (updatedEnemy.keyword == requiredEnemyCode) 10 else 1
+
+                                newScore += scoreValue * scoreMultiplier
                                 updatedEnemy = updatedEnemy.copy(health = 0, isAlive = false) // 사망 처리
                             } else {
                                 updatedEnemy = updatedEnemy.copy(health = newHealth)
@@ -472,7 +496,10 @@ fun GameLoop(
                 // 플레이어와 적 본체 충돌
                 currentEnemies.removeAll { enemy ->
                     if (playerBounds.overlaps(enemy.bounds())) {
-                        newScore += scoreValue
+                        val requiredEnemyCode = keywordMap[latestKeyword.value] // 제시어 비교
+                        val scoreMultiplier = if (enemy.keyword == requiredEnemyCode) 10 else 1
+
+                        newScore += scoreValue * scoreMultiplier
                         playerHealth-- // 플레이어 체력 감소
                         true // 적 제거
                     } else {
@@ -533,10 +560,12 @@ fun LaserView(laser: Laser) {
 @Composable
 fun EnemyView(enemy: Enemy) {
     val density = LocalDensity.current.density
+    val enemyResourceId = getEnemyResourceId(enemy.keyword)
+
     if (enemy.isAlive) {
         Image(
-            painter = painterResource(id = R.drawable.shooting_enemy_default),
-            contentDescription = "Enemy Ship",
+            painter = painterResource(id = enemyResourceId),
+            contentDescription = "Enemy Ship (${enemy.keyword})",
             modifier = Modifier
                 .absoluteOffset {
                     IntOffset(
@@ -547,6 +576,20 @@ fun EnemyView(enemy: Enemy) {
                 .size(enemy.width.toDp(density), enemy.height.toDp(density))
         )
     }
+}
+
+@Composable
+fun getEnemyResourceId(enemyCode: String): Int {
+    val resourceName = "shooting_enemy_" + enemyCode
+
+    val context = LocalContext.current
+    val resourceId = context.resources.getIdentifier(
+        resourceName,
+        "drawable", // drawable 폴더에서 찾기
+        context.packageName
+    )
+
+    return if (resourceId != 0) resourceId else R.drawable.shooting_enemy_default // 리소스가 없으면 기본 이미지로 대체
 }
 
 @Composable
