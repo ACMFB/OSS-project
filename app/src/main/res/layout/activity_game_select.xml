@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <Button
+        android:id="@+id/btnShootingGame"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="슈팅 게임"
+        android:textSize="18sp"/>
+
+    <Button
+        android:id="@+id/btnIconWordGame"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="24dp"
+        android:text="아이콘 단어 게임"
+        android:textSize="18sp"/>
+</LinearLayout>
