@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Hangeulstudy</string>
+
+    <!-- DifficultySelectActivity -->
+    <string name="difficulty_select_title">选择难度</string>
+    <string name="easy">简单</string>
+    <string name="medium">中等</string>
+    <string name="hard">困难</string>
+    <string name="random">随机</string>
+</resources>

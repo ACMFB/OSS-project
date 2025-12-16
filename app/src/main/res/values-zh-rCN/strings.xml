@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">韩文斗士 2025</string>
+
+    <!-- MainActivity -->
+    <string name="main_title">韩文斗士 2025</string>
+    <string name="start_game">开始游戏</string>
+    <string name="study">学习</string>
+    <string name="ranking">排行</string>
+
+    <!-- Language Dialog -->
+    <string name="language_setting">语言设定</string>
+    <string name="korean">한국어</string>
+    <string name="english">English</string>
+    <string name="chinese">中文</string>
+
+    <!-- GameSelectActivity -->
+    <string name="game_select_title">选择游戏</string>
+    <string name="game_1_title">图标单词配对游戏</string>
+    <string name="game_2_title">韩文格子游戏</string>
+    <string name="game_3_title">单词射击游戏</string>
+</resources>

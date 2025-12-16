@@ -8,24 +8,32 @@
     android:padding="16dp"
     tools:context=".GameSelectActivity">
 
-    <Button
-        android:id="@+id/btnShootingGame"
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="슈팅 게임" />
+        android:text="@string/game_select_title"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"/>
 
     <Button
         android:id="@+id/btnIconWordGame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="아이콘 단어 게임" />
+        android:text="@string/game_1_title" />
 
     <Button
         android:id="@+id/btnGridGame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="한글 그리드 게임" />
+        android:text="@string/game_2_title" />
+
+    <Button
+        android:id="@+id/btnShootingGame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/game_3_title" />
 
 </LinearLayout>

@@ -41,7 +41,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="한글파이터 2025"
+            android:text="@string/main_title"
             android:textSize="32sp"
             android:textStyle="bold"
             android:textColor="#6B3E26"
@@ -68,7 +68,7 @@
                 android:id="@+id/btnStart"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="게임 시작"
+                android:text="@string/start_game"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#4E2A14"
@@ -92,7 +92,7 @@
                 android:id="@+id/btnStudy"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="공부하기"
+                android:text="@string/study"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#4E2A14"
@@ -104,7 +104,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="72dp"
-            android:layout_marginTop="20dp">
+            android.layout_marginTop="20dp">
 
             <ImageView
                 android:layout_width="match_parent"
@@ -116,7 +116,7 @@
                 android:id="@+id/btnRanking"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="랭킹"
+                android:text="@string/ranking"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#4E2A14"
