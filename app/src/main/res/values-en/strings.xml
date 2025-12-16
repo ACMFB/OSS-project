@@ -6,6 +6,7 @@
     <string name="start_game">Start Game</string>
     <string name="study">Study</string>
     <string name="ranking">Ranking</string>
+    <string name="review">Review</string>
 
     <!-- Language Dialog -->
     <string name="language_setting">Language Settings</string>

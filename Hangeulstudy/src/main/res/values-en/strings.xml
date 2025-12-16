@@ -7,4 +7,10 @@
     <string name="medium">Medium</string>
     <string name="hard">Hard</string>
     <string name="random">Random</string>
+
+    <!-- StudyActivity -->
+    <string name="review_no_favorites">No favorite words to review.</string>
+    <string name="review_all_words_completed">You have reviewed all favorite words.</string>
+    <string name="added_to_favorites">Added to favorites.</string>
+    <string name="removed_from_favorites">Removed from favorites.</string>
 </resources>

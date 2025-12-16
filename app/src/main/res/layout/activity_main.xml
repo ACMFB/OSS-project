@@ -100,11 +100,35 @@
                 android:background="@android:color/transparent"/>
         </FrameLayout>
 
+        <!-- 복습하기 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="20dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_image"
+                android:scaleType="fitXY"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnReview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/review"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#4E2A14"
+                android:textAllCaps="false"
+                android:background="@android:color/transparent"/>
+        </FrameLayout>
+
         <!-- 랭킹 -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="72dp"
-            android.layout_marginTop="20dp">
+            android:layout_marginTop="20dp">
 
             <ImageView
                 android:layout_width="match_parent"

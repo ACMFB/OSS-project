@@ -6,6 +6,7 @@
     <string name="start_game">开始游戏</string>
     <string name="study">学习</string>
     <string name="ranking">排行</string>
+    <string name="review">复习</string>
 
     <!-- Language Dialog -->
     <string name="language_setting">语言设定</string>

@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.hangeulstudy.DifficultySelectActivity
+import com.example.hangeulstudy.StudyActivity
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
         // 메인 화면 버튼들
         val btnStart = findViewById<Button>(R.id.btnStart)
         val btnStudy = findViewById<Button>(R.id.btnStudy)
+        val btnReview = findViewById<Button>(R.id.btnReview)
         val btnSettings = findViewById<ImageView>(R.id.btnSettings)
 
         // 게임 시작 → GameSelectActivity (미니게임 선택 화면)
@@ -34,6 +36,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(
                 Intent(this, DifficultySelectActivity::class.java)
             )
+        }
+
+        // 복습하기 → 즐겨찾기 단어 학습
+        btnReview.setOnClickListener {
+            val intent = Intent(this, StudyActivity::class.java)
+            intent.putExtra("study_mode", "review")
+            startActivity(intent)
         }
 
         // 설정 버튼 클릭 시 언어 설정 다이얼로그 표시

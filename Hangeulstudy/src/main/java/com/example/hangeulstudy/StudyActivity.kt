@@ -1,5 +1,6 @@
 package com.example.hangeulstudy
 
+import android.app.Activity
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -20,23 +21,15 @@ import com.example.hangeulstudy.databinding.ActivityStudyBinding
 
 class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
-    // 카테고리 목록
+    private var studyMode: String? = null
+    private var reviewWords: MutableList<Word> = mutableListOf()
+    private var reviewIndex = 0
+
     private val categories = listOf(
-        "Emotion",
-        "Action",
-        "Personality",
-        "Weather",
-        "Food Ingredient",
-        "Place",
-        "Hobby",
-        "Nature",
-        "State",
-        "Time Expression"
+        "Emotion", "Action", "Personality", "Weather", "Food Ingredient",
+        "Place", "Hobby", "Nature", "State", "Time Expression"
     )
-
-    // 이전 카테고리 기억 (연속 방지용)
     private var lastCategory: String? = null
-
     private var selectedDifficulty: Difficulty = Difficulty.RANDOM
     private lateinit var binding: ActivityStudyBinding
     private val gptRepo = GPTRepository()
@@ -47,22 +40,11 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var currentWord: Word? = null
     private val favoriteWords = mutableSetOf<Word>()
 
-    // ActivityResultLauncher for FavoritesActivity
     private val favoritesActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val deletedWords = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                result.data?.getParcelableArrayListExtra("deletedWords", Word::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                result.data?.getParcelableArrayListExtra<Word>("deletedWords")
-            }
-
-            if (deletedWords != null) {
-                favoriteWords.removeAll(deletedWords.toSet())
-                updateFavoriteButtonState() // Update star icon on return
-            }
+        if (result.resultCode == Activity.RESULT_OK) {
+            handleFavoritesUpdate()
         }
     }
 
@@ -71,23 +53,27 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding = ActivityStudyBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        favoriteWords.addAll(
-            FavoritesStorage.load(this)
-        )
-
-        selectedDifficulty = intent.getStringExtra("difficulty")
-            ?.let { Difficulty.valueOf(it) }
-            ?: Difficulty.RANDOM
+        studyMode = intent.getStringExtra("study_mode")
+        favoriteWords.addAll(FavoritesStorage.load(this))
 
         tts = TextToSpeech(this, this)
         setSpeakButtonEnabled(false)
 
-        fetchNewWord()
+        if (studyMode == "review") {
+            setupReviewMode()
+        } else {
+            setupNormalMode()
+        }
 
-        binding.btnNext.setOnClickListener { fetchNewWord() }
+        binding.btnNext.setOnClickListener {
+            if (studyMode == "review") {
+                fetchNextReviewWord()
+            } else {
+                fetchNewWord()
+            }
+        }
         binding.btnSpeak.setOnClickListener { speakOut() }
         binding.btnFavorite.setOnClickListener { toggleFavorite() }
-
         binding.btnShowFavorites.setOnClickListener {
             val intent = Intent(this, FavoritesActivity::class.java)
             intent.putParcelableArrayListExtra("favoriteWords", ArrayList(favoriteWords))
@@ -95,12 +81,78 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (studyMode != "review") {
+             handleFavoritesUpdate()
+        }
+    }
+
+    private fun handleFavoritesUpdate() {
+        val previouslyFavoritedCount = favoriteWords.size
+        favoriteWords.clear()
+        favoriteWords.addAll(FavoritesStorage.load(this))
+
+        if (studyMode == "review") {
+            reviewWords.clear()
+            reviewWords.addAll(favoriteWords)
+            reviewWords.shuffle()
+            if(reviewIndex >= reviewWords.size) reviewIndex = 0
+            fetchNextReviewWord()
+        } else {
+            currentWord?.isBookmarked = favoriteWords.any { it.korean == currentWord?.korean }
+            updateFavoriteButtonState()
+        }
+
+        if (favoriteWords.size < previouslyFavoritedCount) {
+            // A word might have been removed
+        }
+    }
+
+    private fun setupReviewMode() {
+        binding.btnShowFavorites.visibility = android.view.View.GONE
+        reviewWords.addAll(favoriteWords)
+        reviewWords.shuffle()
+        fetchNextReviewWord()
+    }
+
+    private fun setupNormalMode() {
+        selectedDifficulty = intent.getStringExtra("difficulty")
+            ?.let { Difficulty.valueOf(it) }
+            ?: Difficulty.RANDOM
+        fetchNewWord()
+    }
+
+    private fun fetchNextReviewWord() {
+        if (reviewWords.isEmpty()) {
+            showError(getString(R.string.review_no_favorites))
+            binding.btnNext.isEnabled = false
+            return
+        }
+
+        if (reviewIndex >= reviewWords.size) {
+            Toast.makeText(this, getString(R.string.review_all_words_completed), Toast.LENGTH_SHORT).show()
+            reviewIndex = 0
+        }
+
+        currentWord = reviewWords[reviewIndex]
+        currentWord?.isBookmarked = true
+        updateUi(currentWord!!)
+        reviewIndex++
+    }
+
     private fun toggleFavorite() {
         currentWord?.let { word ->
-            if (favoriteWords.contains(word)) {
-                favoriteWords.remove(word)
-            } else {
+            word.isBookmarked = !word.isBookmarked
+
+            if (word.isBookmarked) {
                 favoriteWords.add(word)
+            } else {
+                favoriteWords.remove(word)
+                if (studyMode == "review") {
+                    reviewWords.remove(word)
+                    if (reviewIndex > 0) reviewIndex--
+                }
             }
 
             FavoritesStorage.save(this, favoriteWords)
@@ -108,22 +160,22 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
             Toast.makeText(
                 this,
-                if (favoriteWords.contains(word)) "Added to favorites"
-                else "Removed from favorites",
+                if (word.isBookmarked) getString(R.string.added_to_favorites) else getString(R.string.removed_from_favorites),
                 Toast.LENGTH_SHORT
             ).show()
+
+            if (studyMode == "review" && reviewWords.isEmpty()) {
+                fetchNextReviewWord()
+            }
         }
     }
 
-
     private fun updateFavoriteButtonState() {
-        currentWord?.let { word ->
-            val isFavorite = favoriteWords.contains(word)
-            binding.btnFavorite.setImageResource(
-                if (isFavorite) android.R.drawable.btn_star_big_on
-                else android.R.drawable.btn_star_big_off
-            )
-        }
+        val isFavorite = currentWord?.isBookmarked ?: false
+        binding.btnFavorite.setImageResource(
+            if (isFavorite) android.R.drawable.btn_star_big_on
+            else android.R.drawable.btn_star_big_off
+        )
     }
 
     override fun onInit(status: Int) {
@@ -174,25 +226,15 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         lifecycleScope.launch {
             try {
                 val usedWordsString = if (usedWords.isEmpty()) "none" else usedWords.joinToString(", ")
-
-                // 🔹 카테고리 랜덤 (연속 방지)
-                val randomCategory = categories
-                    .filter { it != lastCategory }
-                    .random()
+                val randomCategory = categories.filter { it != lastCategory }.random()
                 lastCategory = randomCategory
-
-                // 🔹 난이도 랜덤
                 val difficultyEnum = if (selectedDifficulty == Difficulty.RANDOM) {
                     listOf(Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD).random()
                 } else {
                     selectedDifficulty
                 }
-
                 val difficultyLabel = difficultyEnum.label
-
-
-                val prompt = """
-You are an API that creates Korean word quizzes.
+                val prompt = """You are an API that creates Korean word quizzes.
 
 You MUST follow ALL rules strictly.
 
@@ -214,8 +256,7 @@ Never use these words:
 [$usedWordsString]
 
 Example of a valid response:
-사랑:love:나는 너를 정말 사랑해.
-""".trimIndent()
+사랑:love:나는 너를 정말 사랑해.""".trimIndent()
 
                 val responseText = gptRepo.askGPT(prompt)
                 val lastLine = responseText.lines().lastOrNull { it.contains(":") } ?: responseText
@@ -229,12 +270,13 @@ Example of a valid response:
                         difficulty = difficultyEnum
                     )
 
-                    // 🔒 중복 + 영어 검증
                     if (usedWords.contains(newWord.korean) || containsEnglish(newWord.example)) {
-                        showError("Invalid word generated. Please try again.")
+                        showError("Invalid word. Retrying...")
+                        fetchNewWord()
                         return@launch
                     }
 
+                    newWord.isBookmarked = favoriteWords.any { it.korean == newWord.korean }
                     usedWords.add(newWord.korean)
                     currentWord = newWord
                     updateUi(newWord)
@@ -248,17 +290,15 @@ Example of a valid response:
             }
         }
     }
-    private fun containsEnglish(text: String): Boolean {
-        return text.any { it in 'A'..'Z' || it in 'a'..'z' }
-    }
 
+    private fun containsEnglish(text: String): Boolean {
+        return text.any { it in 'a'..'z' || it in 'A'..'Z' }
+    }
 
     private fun updateUi(word: Word) {
         binding.txtKorean.text = word.korean
         binding.txtMeaning.text = word.meaning
         binding.txtExample.text = word.example
-
-        // 난이도 UI 표시
         binding.txtDifficulty.text = "난이도: ${word.difficulty.displayName}"
         binding.txtDifficulty.setBackgroundColor(word.difficulty.color)
         updateFavoriteButtonState()
@@ -277,8 +317,8 @@ Example of a valid response:
     private fun showError(message: String) {
         binding.txtKorean.text = "Error"
         binding.txtMeaning.text = message
-        binding.txtExample.text = "Check your internet connection or API key."
-        binding.btnNext.isEnabled = true
+        binding.txtExample.text = if (studyMode == "review") "" else "Check internet or API key."
+        binding.btnNext.isEnabled = studyMode != "review"
         binding.btnFavorite.isEnabled = false
     }
 

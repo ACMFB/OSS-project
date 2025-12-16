@@ -6,6 +6,7 @@
     <string name="start_game">게임 시작</string>
     <string name="study">공부하기</string>
     <string name="ranking">랭킹</string>
+    <string name="review">복습하기</string>
 
     <!-- Language Dialog -->
     <string name="language_setting">언어 설정</string>

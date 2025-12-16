@@ -7,4 +7,10 @@
     <string name="medium">보통</string>
     <string name="hard">어려움</string>
     <string name="random">무작위</string>
+
+    <!-- StudyActivity -->
+    <string name="review_no_favorites">복습할 즐겨찾기 단어가 없습니다.</string>
+    <string name="review_all_words_completed">모든 즐겨찾기 단어를 복습했습니다.</string>
+    <string name="added_to_favorites">즐겨찾기에 추가되었습니다.</string>
+    <string name="removed_from_favorites">즐겨찾기에서 제거되었습니다.</string>
 </resources>
