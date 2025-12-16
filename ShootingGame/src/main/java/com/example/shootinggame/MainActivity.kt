@@ -59,34 +59,40 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ShootingGameTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ShootingGame(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                ShootingGame(
+                    onExitGame = { finish() }
+                )
             }
         }
     }
 }
 
 val juaFontFamily = FontFamily(Font(R.font.shooting_jua, FontWeight.Normal)) // 폰트 설정
-val keywordList = listOf( // 제시어 리스트
-    "평범한", "웃는", "실망한", "놀란", "졸린", "즐거운", "큰", "작은",
-    "빨강색", "주황색", "노랑색", "초록색", "파랑색", "검은색", "하양색", "분홍색"
+
+val keywordMap = mapOf( // 제시어 리스트
+    "평범한" to "default", "웃는" to "smile", "실망한" to "disappointed",
+    "놀란" to "surprised", "졸린" to "sleepy", "즐거운" to "happy",
+    "빨강색" to "red", "주황색" to "orange", "노랑색" to "yellow",
+    "초록색" to "green", "파랑색" to "blue", "검은색" to "black",
+    "하양색" to "white", "분홍색" to "pink"
 )
-val keywordResetTime: Long = 10000L // 제시어 변경 주기 설정 (밀리초)
+val keywordList = keywordMap.keys.toList()
+val enemyCodeList = keywordMap.values.toList()
+val keywordResetTime: Long = 7500L // 제시어 변경 주기 설정 (밀리초)
 val playerSize: Float = 100f // 플레이어 크기
 val playerMaxHp: Int = 10 // 플레이어 최대 체력 설정
 val playerShootTime: Long = 250L // 플레이어 레이저 발사 쿨타임 설정 (밀리초)
 val laserWidth: Float = 10f // 레이저 크기
 val laserHeight: Float = 30f
 val enemySize: Float = 100f // 적 크기
-val enemySpawnTime: Long = 10000L // 적 출현 시간
+val initialEnemySpawnTime: Long = 10000L // 초기 적 출현 시간
+val minSpawnTime: Long = 1000L // 최소 적 출현 시간
+val spawnTimeDecreaseRate: Long = 1 // 적 출현 시간 감소 비율
 val enemyShootTime: Long = 2000L // 적 탄환 발사 시간
-val enemyMoveSpeed: Float = 3f // 적 이동 속도
+val enemyMoveSpeed: Float = 5f // 적 이동 속도
 val enemyBulletSize: Float = 15f // 적 탄환 크기
 val enemyBulletSpeed: Float = 8f // 적 탄환 속도
+val scoreValue: Int = 100 // 스코어 증가량
 
 interface GameEntity { // 엔티티들이 가질 기본 속성
     val x: Float
@@ -107,7 +113,7 @@ data class Player( // 플레이어 엔티티
     override val y: Float,
     override val width: Float = playerSize,
     override val height: Float = playerSize,
-    var health: Int = 3,
+    var health: Int = playerMaxHp,
     override val isAlive: Boolean = true
 ) : GameEntity
 
@@ -129,7 +135,8 @@ data class Enemy(
     override val isAlive: Boolean = true,
     val targetY: Float, // 멈춰야 할 최종 y 위치
     val isMoving: Boolean = true, // 이동 중인지 체크
-    var lastShotTime: Long = 0L // 마지막 탄환 발사 시간
+    var lastShotTime: Long = 0L, // 마지막 탄환 발사 시간
+    val keyword: String
 ) : GameEntity
 
 data class EnemyBullet(
@@ -151,9 +158,10 @@ data class GameState( // 엔티티들의 상태를 저장
 )
 
 @Composable
-fun ShootingGame(name: String, modifier: Modifier = Modifier) {
+fun ShootingGame(
+    onExitGame: () -> Unit
+) {
     var isInitialized by remember { mutableStateOf(false) } // 상태 초기화 여부 저장
-    var screenBounds by remember { mutableStateOf(IntSize.Zero) } // 화면 크기 저장
     val density = LocalDensity.current.density // Dp와 Px의 전환을 위한 밀도 정보 저장
     var gameState by remember { // 엔티티 상태 변화 저장
         mutableStateOf(
@@ -169,7 +177,12 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
     var pauseCheck by remember { mutableStateOf(false) } // 일시정지 상태 체크
     var currentScore by remember { mutableStateOf(0) }
     var currentKeyword by remember { mutableStateOf("") }
-    var playerHp by remember { mutableStateOf(playerMaxHp) }
+
+    var playerHealth by remember { mutableStateOf(playerMaxHp) }
+    val isGameOver = playerHealth <= 0
+    if (isGameOver && !pauseCheck) { // 게임오버시 일시정지 처리
+        pauseCheck = true
+    }
 
     val onKeywordSelected: (String) -> Unit = { newKeyword -> // RandomKeyword() 함수의 콜백으로 받은 스트링을 키워드로 저장
         currentKeyword = newKeyword
@@ -189,48 +202,77 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
         onLoadingComplete = { success -> gifLoadingComplete = success }
     )
 
-    GameLoop(
-        gameState = gameState,
-        onUpdateState = { newState -> gameState = newState },
-        screenBounds = screenBounds,
-        playerShootTime = playerShootTime,
-        pauseCheck = pauseCheck
-    )
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .onSizeChanged { size ->
-                screenBounds = size
-                if (!isInitialized && size != IntSize.Zero) {
-                    gameState = gameState.copy(
-                        player = gameState.player.copy( // 플레이어 초기 위치 설정
-                            x = (size.width - gameState.player.width * density) / 2f,
-                            y = size.height - gameState.player.height * density - 50.dp.toPx(density)
-                        )
-                    )
-                    isInitialized = true
-                }
-            }
             .pointerInput(Unit, pauseCheck) { // 플레이어 드래그 이동
+                val playerWidthPx = playerSize * density
+                val playerHeightPx = playerSize * density
+
                 detectDragGestures { change, dragAmount ->
-                    if (pauseCheck) return@detectDragGestures // 일시정지 시 안움직이게
+                    if (pauseCheck) return@detectDragGestures
 
                     change.consume()
                     val newX = gameState.player.x + dragAmount.x
                     val newY = gameState.player.y + dragAmount.y
-                    val maxX = screenBounds.width - gameState.player.width * density // 화면 경계 체크
-                    val maxY = screenBounds.height - gameState.player.height * density
+
+                    val maxX = size.width - (playerWidthPx / 2f)
+                    val maxY = size.height - playerHeightPx
 
                     gameState = gameState.copy(
                         player = gameState.player.copy(
-                            x = newX.coerceIn(0f, maxX),
-                            y = newY.coerceIn(0f, maxY)
+                            x = newX.coerceIn(0f, maxX.toFloat()),
+                            y = newY.coerceIn(0f, maxY.toFloat())
                         )
                     )
                 }
             }
     ) {
+        val screenWidthPx = constraints.maxWidth.toFloat()
+        val screenHeightPx = constraints.maxHeight.toFloat()
+
+        LaunchedEffect(screenWidthPx, screenHeightPx) {
+            if (!isInitialized) {
+                val playerWidthPx = playerSize * density
+                val playerHeightPx = playerSize * density
+                val bottomPaddingPx = 50.dp.toPx(density)
+
+                val initialX = (screenWidthPx - playerWidthPx) / 2f
+                val initialY = screenHeightPx - playerHeightPx - bottomPaddingPx
+
+                gameState = gameState.copy(
+                    player = gameState.player.copy(x = initialX, y = initialY)
+                )
+                isInitialized = true
+            }
+        }
+
+        val onUpdateScore: (Int) -> Unit = { newScore ->
+            currentScore = newScore
+        }
+
+        val onUpdateHealth: (Int) -> Unit = { newHealth ->
+            playerHealth = newHealth.coerceAtLeast(0)
+
+            gameState = gameState.copy(
+                player = gameState.player.copy(health = playerHealth)
+            )
+        }
+
+        GameLoop(
+            gameState = gameState,
+            onUpdateState = { newState -> gameState = newState },
+            screenWidthPx = screenWidthPx,
+            screenHeightPx = screenHeightPx,
+            playerShootTime = playerShootTime,
+            pauseCheck = pauseCheck,
+            currentScore = currentScore,
+            onUpdateScore = onUpdateScore,
+            currentKeyword = currentKeyword,
+            playerHealth = playerHealth,
+            onUpdateHealth = onUpdateHealth
+        )
+
         if (isInitialized) {
             PlayerView(gameState.player) // 플레이어 렌더링
 
@@ -247,15 +289,81 @@ fun ShootingGame(name: String, modifier: Modifier = Modifier) {
             }
         }
 
+        val onQuitGame: () -> Unit = {
+            playerHealth = 0
+        }
+
         CreateInterface( // 인터페이스 표시
             pauseCheck = pauseCheck,
             gifLoadingComplete = gifLoadingComplete,
             currentScore = currentScore,
-            playerHp = playerHp,
+            playerHp = playerHealth,
             currentKeyword = currentKeyword,
             onPauseToggle = { pauseCheck = !pauseCheck },
-            onQuitToggle = { pauseCheck = !pauseCheck } // TODO: 나중에 게임 종료 코드로 바꾸기
+            onQuitToggle = onQuitGame,
+            isGameOver = isGameOver
         )
+
+        if (isGameOver) { // 게임 오버 화면 표시
+            GameOverScreen(
+                score = currentScore,
+                onExitGame = onExitGame
+            )
+        }
+    }
+}
+
+@Composable
+fun GameOverScreen(
+    score: Int,
+    onExitGame: () -> Unit
+) {
+    val exitImage = painterResource(R.drawable.shooting_exit_button)
+    val pauseBackgroundImage = painterResource(R.drawable.shooting_pause_background)
+
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val screenWidth = maxWidth
+
+        Image( // 일시정지 시 반투명한 검은 배경 표시
+            painter = pauseBackgroundImage,
+            contentDescription = "일시정지 화면 배경",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillHeight,
+            alpha = 0.5F
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = "GAME OVER",
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red,
+                fontFamily = juaFontFamily,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "점수: $score",
+                fontSize = 24.sp,
+                color = Color.White,
+                fontFamily = juaFontFamily,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+
+            ImageButton( // 돌아가기 버튼 표시
+                painter = exitImage,
+                contentDescription = "돌아가기 버튼",
+                buttonSize = screenWidth / 2,
+                onClick = onExitGame,
+                modifier = Modifier
+            )
+        }
     }
 }
 
@@ -266,47 +374,73 @@ fun Float.toDp(density: Float): Dp = Dp(this / density) // Px를 Dp로 변환
 fun GameLoop(
     gameState: GameState,
     onUpdateState: (GameState) -> Unit,
-    screenBounds: IntSize,
+    screenWidthPx: Float,
+    screenHeightPx: Float,
     playerShootTime: Long,
-    pauseCheck: Boolean
+    pauseCheck: Boolean,
+    currentScore: Int,
+    onUpdateScore: (Int) -> Unit,
+    currentKeyword: String,
+    playerHealth: Int,
+    onUpdateHealth: (Int) -> Unit
 ) {
     val currentGameState by rememberUpdatedState(gameState)
     val updateState by rememberUpdatedState(onUpdateState)
 
+    val latestKeyword = rememberUpdatedState(currentKeyword)
+
+    val latestScore = rememberUpdatedState(currentScore)
+    val updateScore = rememberUpdatedState(onUpdateScore)
+
     var lastFireTime by remember { mutableStateOf(0L) } // 플레이어 레이저 타이머
     val density = LocalDensity.current.density
-    val screenHeight = screenBounds.height.toFloat()
+
+    val halfScreenY = screenHeightPx / 2f
 
     val enemyWidthPx = enemySize * density
     val enemyHeightPx = enemySize * density
     val enemyBulletWidthPx = enemyBulletSize * density
     val enemyBulletHeightPx = enemyBulletSize * density
 
-    val playerLaserOffsetPx = 47.5f * density // 플레이어 레이저 오프셋을 픽셀 단위로 미리 계산
+    val playerLaserOffsetPx = 24.5f * density // 플레이어 레이저 오프셋을 픽셀 단위로 미리 계산
 
     val randomGenerator = remember { Random(System.currentTimeMillis()) }
+
+    val latestHealth = rememberUpdatedState(playerHealth)
+    val onUpdateHealthState = rememberUpdatedState(onUpdateHealth)
 
     LaunchedEffect(pauseCheck) {
         if (!pauseCheck) { // 일시정지 상태가 아닐 때만 실행
             var lastEnemySpawnTime = System.currentTimeMillis() // 적 생성 타이머
-            val screenWidth = screenBounds.width.toFloat()
-            val halfScreenY = screenHeight / 2f
 
             while (isActive) {
                 val currentTime = System.currentTimeMillis()
                 var newState = currentGameState.copy()
                 val player = newState.player
+                var currentPlayerHealth = latestHealth.value
+
+                val scoreDecrease = latestScore.value / spawnTimeDecreaseRate
+                val newSpawnTime = (initialEnemySpawnTime - scoreDecrease).coerceAtLeast(minSpawnTime)
 
                 // 적 생성
-                if (currentTime - lastEnemySpawnTime >= enemySpawnTime) {
-                    val maxX = screenWidth - enemyWidthPx
-                    val randomX = randomGenerator.nextFloat() * maxX
+                if (currentTime - lastEnemySpawnTime >= newSpawnTime) {
+                    val maxX = screenWidthPx - enemyWidthPx
+                    val validatedMaxX = if (maxX < 0) 0f else maxX
+                    val randomX = randomGenerator.nextFloat() * validatedMaxX
                     val maxTargetY = halfScreenY - enemyHeightPx
-                    val randomTargetY = randomGenerator.nextFloat() * maxTargetY
+                    val minTargetY = 100.dp.toPx(density)
+                    val rangeY = maxTargetY - minTargetY
+                    val randomTargetY = if (rangeY <= 0) minTargetY else randomGenerator.nextFloat() * rangeY + minTargetY
+
+                    val enemyCode = enemyCodeList.random()
 
                     val newEnemy = Enemy(
-                        x = randomX, y = -enemyHeightPx, targetY = randomTargetY,
-                        width = enemyWidthPx, height = enemyHeightPx
+                        x = randomX,
+                        y = -enemyHeightPx,
+                        targetY = randomTargetY,
+                        width = enemyWidthPx,
+                        height = enemyHeightPx,
+                        keyword = enemyCode
                     )
                     newState = newState.copy(enemies = newState.enemies + newEnemy)
                     lastEnemySpawnTime = currentTime
@@ -360,8 +494,12 @@ fun GameLoop(
                         val bulletY = enemyCenterY - enemyBulletHeightPx / 2f
 
                         val newBullet = EnemyBullet(
-                            x = bulletX, y = bulletY, velX = velX, velY = velY,
-                            width = enemyBulletWidthPx, height = enemyBulletHeightPx
+                            x = bulletX,
+                            y = bulletY,
+                            velX = velX,
+                            velY = velY,
+                            width = enemyBulletWidthPx,
+                            height = enemyBulletHeightPx
                         )
                         newEnemyBullets.add(newBullet) // 새 탄환 리스트에 추가
                         currentEnemy = currentEnemy.copy(lastShotTime = currentTime)
@@ -379,7 +517,11 @@ fun GameLoop(
                 val enemyBulletsAfterMove = newState.enemyBullets.mapNotNull { bullet ->
                     val newX = bullet.x + bullet.velX
                     val newY = bullet.y + bullet.velY
-                    val outOfBounds = newX < -bullet.width || newX > screenWidth || newY < -bullet.height || newY > screenHeight
+                    val outOfBounds =
+                        newX < -bullet.width ||
+                                newX > screenWidthPx ||
+                                newY < -bullet.height ||
+                                newY > screenHeightPx
                     bullet.takeIf { !outOfBounds }?.copy(x = newX, y = newY)
                 }
 
@@ -394,8 +536,9 @@ fun GameLoop(
                 var currentLasers = newState.lasers.toMutableList()
                 var currentEnemies = newState.enemies.toMutableList()
                 var currentEnemyBullets = newState.enemyBullets.toMutableList()
-                var playerHealth = player.health
                 val playerBounds = player.bounds()
+
+                var newScore = latestScore.value
 
                 // 레이저와 적 충돌
                 val lasersToRemove = mutableSetOf<Laser>()
@@ -413,10 +556,14 @@ fun GameLoop(
 
                             // 적 체력 감소
                             val newHealth = updatedEnemy.health - 1
-                            updatedEnemy = if (newHealth <= 0) {
-                                updatedEnemy.copy(health = 0, isAlive = false) // 사망 처리
+                            if (newHealth <= 0) {
+                                val requiredEnemyCode = keywordMap[latestKeyword.value] // 제시어 비교
+                                val scoreMultiplier = if (updatedEnemy.keyword == requiredEnemyCode) 10 else 1
+
+                                newScore += scoreValue * scoreMultiplier
+                                updatedEnemy = updatedEnemy.copy(health = 0, isAlive = false) // 사망 처리
                             } else {
-                                updatedEnemy.copy(health = newHealth)
+                                updatedEnemy = updatedEnemy.copy(health = newHealth)
                             }
                         }
                     }
@@ -429,7 +576,7 @@ fun GameLoop(
                 // 플레이어와 적 탄환 충돌
                 currentEnemyBullets.removeAll { bullet ->
                     if (playerBounds.overlaps(bullet.bounds())) {
-                        playerHealth-- // 플레이어 체력 감소
+                        currentPlayerHealth-- // 플레이어 체력 감소
                         true // 탄환 제거
                     } else {
                         false
@@ -439,20 +586,28 @@ fun GameLoop(
                 // 플레이어와 적 본체 충돌
                 currentEnemies.removeAll { enemy ->
                     if (playerBounds.overlaps(enemy.bounds())) {
-                        playerHealth-- // 플레이어 체력 감소
+                        val requiredEnemyCode = keywordMap[latestKeyword.value] // 제시어 비교
+                        val scoreMultiplier = if (enemy.keyword == requiredEnemyCode) 10 else 1
+
+                        newScore += scoreValue * scoreMultiplier
+                        currentPlayerHealth-- // 플레이어 체력 감소
                         true // 적 제거
                     } else {
                         false
                     }
                 }
 
+                if (currentPlayerHealth != latestHealth.value) {
+                    onUpdateHealthState.value(currentPlayerHealth)
+                }
+
                 newState = newState.copy(
-                    player = player.copy(health = playerHealth),
+                    player = player.copy(health = player.health),
                     lasers = currentLasers,
                     enemies = currentEnemies.filter { it.isAlive }, // 체력 0 이하로 떨어진 적 제거
                     enemyBullets = currentEnemyBullets
                 )
-
+                updateScore.value(newScore)
                 updateState(newState)
                 delay(16)
             }
@@ -499,10 +654,12 @@ fun LaserView(laser: Laser) {
 @Composable
 fun EnemyView(enemy: Enemy) {
     val density = LocalDensity.current.density
+    val enemyResourceId = getEnemyResourceId(enemy.keyword)
+
     if (enemy.isAlive) {
         Image(
-            painter = painterResource(id = R.drawable.shooting_enemy_default),
-            contentDescription = "Enemy Ship",
+            painter = painterResource(id = enemyResourceId),
+            contentDescription = "Enemy Ship (${enemy.keyword})",
             modifier = Modifier
                 .absoluteOffset {
                     IntOffset(
@@ -513,6 +670,20 @@ fun EnemyView(enemy: Enemy) {
                 .size(enemy.width.toDp(density), enemy.height.toDp(density))
         )
     }
+}
+
+@Composable
+fun getEnemyResourceId(enemyCode: String): Int {
+    val resourceName = "shooting_enemy_" + enemyCode
+
+    val context = LocalContext.current
+    val resourceId = context.resources.getIdentifier(
+        resourceName,
+        "drawable", // drawable 폴더에서 찾기
+        context.packageName
+    )
+
+    return if (resourceId != 0) resourceId else R.drawable.shooting_enemy_default // 리소스가 없으면 기본 이미지로 대체
 }
 
 @Composable
@@ -559,7 +730,8 @@ fun CreateInterface( // 배경 재생, 일시정지 기능 구현, 스코어 및
     playerHp: Int,
     currentKeyword: String,
     onPauseToggle: () -> Unit,
-    onQuitToggle: () -> Unit
+    onQuitToggle: () -> Unit,
+    isGameOver: Boolean
 ) {
     val pauseImage = painterResource(R.drawable.shooting_pause) // 이미지 설정들
     val pauseBackgroundImage = painterResource(R.drawable.shooting_pause_background)
@@ -612,7 +784,7 @@ fun CreateInterface( // 배경 재생, 일시정지 기능 구현, 스코어 및
                     .align(Alignment.TopStart)
             )
 
-            if (pauseCheck) { // 일시정지 상태인지 체크 후 일시정지 화면 생성 및 삭제
+            if (pauseCheck && !isGameOver) { // 일시정지 상태인지 체크 후 일시정지 화면 생성 및 삭제
                 Image( // 일시정지 시 반투명한 검은 배경 표시
                     painter = pauseBackgroundImage,
                     contentDescription = "일시정지 화면 배경",
@@ -630,8 +802,6 @@ fun CreateInterface( // 배경 재생, 일시정지 기능 구현, 스코어 및
                     onQuitClicked = onQuitToggle
                 )
             }
-        } else { // gif 배경 로딩 실패 시
-            // TODO: 에러 띄우고 게임 종료
         }
     }
 }
@@ -695,7 +865,7 @@ fun GifLoader( // gif 이미지 로딩 함수 -> BackgroundLoop() 함수용
 
     val imageLoader = ImageLoader.Builder(context)
         .components {
-                add(GifDecoder.Factory())
+            add(GifDecoder.Factory())
         }
         .build()
 
@@ -735,6 +905,8 @@ fun BackgroundLoop(
 @Composable
 fun ShootingGamePreview() {
     ShootingGameTheme {
-        ShootingGame("Android")
+        ShootingGame(
+            onExitGame = {}
+        )
     }
 }
