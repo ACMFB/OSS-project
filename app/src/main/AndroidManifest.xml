@@ -25,6 +25,11 @@
             android:exported="false" />
 
         <activity
+            android:name="com.example.hangulgrid.MainActivity"
+            android:theme="@style/Theme.HangulGrid" />
+
+
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -35,7 +40,7 @@
 
         <!-- Hangeulstudy 라이브러리의 액티비티 등록 -->
         <activity
-            android:name="com.example.finalui1.com.example.hangeulstudy.StudyActivity"
+            android:name="com.example.hangeulstudy.StudyActivity"
             android:exported="false"
             android:theme="@style/Theme.Hangeulstudy" />
 

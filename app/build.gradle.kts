@@ -52,6 +52,7 @@ dependencies {
     implementation(project(":Hangeulstudy"))
     implementation(project(":ShootingGame"))
     implementation(project(":IconWordGame-main"))
+    implementation(project(":Hangeul-grid-game"))
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")

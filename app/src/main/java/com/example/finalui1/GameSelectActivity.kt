@@ -13,6 +13,7 @@ class GameSelectActivity : AppCompatActivity() {
 
         val btnShooting = findViewById<Button>(R.id.btnShootingGame)
         val btnIconWord = findViewById<Button>(R.id.btnIconWordGame)
+        val btnGridGame = findViewById<Button>(R.id.btnGridGame)
 
         btnShooting.setOnClickListener {
             startActivity(
@@ -23,6 +24,12 @@ class GameSelectActivity : AppCompatActivity() {
         btnIconWord.setOnClickListener {
             startActivity(
                 Intent(this, com.example.iconwordgame.MainActivity::class.java)
+            )
+        }
+
+        btnGridGame.setOnClickListener {
+            startActivity(
+                Intent(this, com.example.hangulgrid.MainActivity::class.java)
             )
         }
     }

@@ -1,24 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="16dp"
+    tools:context=".GameSelectActivity">
 
     <Button
         android:id="@+id/btnShootingGame"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="슈팅 게임"
-        android:textSize="18sp"/>
+        android:layout_height="wrap_content"
+        android:text="슈팅 게임" />
 
     <Button
         android:id="@+id/btnIconWordGame"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_marginTop="24dp"
-        android:text="아이콘 단어 게임"
-        android:textSize="18sp"/>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="아이콘 단어 게임" />
+
+    <Button
+        android:id="@+id/btnGridGame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="한글 그리드 게임" />
+
 </LinearLayout>
