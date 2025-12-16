@@ -24,6 +24,7 @@ class GPTRepository {
     suspend fun askGPT(prompt: String): String = withContext(Dispatchers.IO) {
         val json = JSONObject()
         json.put("model", "gpt-4o-mini")
+        json.put("temperature", 0.35)
         val messages = JSONObject()
         messages.put("role", "user")
         messages.put("content", prompt)

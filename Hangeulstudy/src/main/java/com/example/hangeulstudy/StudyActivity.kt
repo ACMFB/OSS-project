@@ -19,6 +19,24 @@ import com.example.hangeulstudy.databinding.ActivityStudyBinding
 
 class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
+    // 카테고리 목록
+    private val categories = listOf(
+        "Emotion",
+        "Action",
+        "Personality",
+        "Weather",
+        "Food Ingredient",
+        "Place",
+        "Hobby",
+        "Nature",
+        "State",
+        "Time Expression"
+    )
+
+    // 이전 카테고리 기억 (연속 방지용)
+    private var lastCategory: String? = null
+
+    private var selectedDifficulty: Difficulty = Difficulty.RANDOM
     private lateinit var binding: ActivityStudyBinding
     private val gptRepo = GPTRepository()
     private val usedWords = mutableSetOf<String>()
@@ -52,6 +70,10 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding = ActivityStudyBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        selectedDifficulty = intent.getStringExtra("difficulty")
+            ?.let { Difficulty.valueOf(it) }
+            ?: Difficulty.RANDOM
+        
         tts = TextToSpeech(this, this)
         setSpeakButtonEnabled(false)
 
@@ -139,22 +161,50 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         lifecycleScope.launch {
             try {
                 val usedWordsString = if (usedWords.isEmpty()) "none" else usedWords.joinToString(", ")
-                val prompt =   """
-                    You are an API that creates Korean word quizzes.
-                    When I request, you must respond only in the format 'KoreanWord:EnglishMeaning:KoreanExample'.
-                    Do not add any other explanations, categories, parts of speech, or line breaks. Only the 'Word:Meaning:Example' format is allowed.
 
-                    Pick a word randomly from one of the categories below:
-                    [Emotion, Action, Personality, Weather, Food Ingredient, Place, Hobby, Nature, State, Time Expression]
+                // 🔹 카테고리 랜덤 (연속 방지)
+                val randomCategory = categories
+                    .filter { it != lastCategory }
+                    .random()
+                lastCategory = randomCategory
 
-                    And you must never use the words from the following list:
-                    [$usedWordsString]
+                // 🔹 난이도 랜덤
+                val difficultyEnum = if (selectedDifficulty == Difficulty.RANDOM) {
+                    listOf(Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD).random()
+                } else {
+                    selectedDifficulty
+                }
 
-                    I'll emphasize again. Your response must be in the 'Word:Meaning:Example' format. For example, '사랑:love:나는 너를 사랑해.'
-                    """.trimIndent()
+                val difficultyLabel = difficultyEnum.label
+
+
+                val prompt = """
+You are an API that creates Korean word quizzes.
+
+You MUST follow ALL rules strictly.
+
+1. Respond ONLY in this exact format:
+   KoreanWord:EnglishMeaning:KoreanExample
+
+2. The KoreanExample MUST be written ONLY in Korean.
+   - DO NOT include English words.
+   - DO NOT mix languages.
+   - If English appears, the response is INVALID.
+
+3. Do NOT add explanations, symbols, or line breaks.
+
+Pick ONE Korean word that matches:
+- Category: $randomCategory
+- Difficulty level: $difficultyLabel
+
+Never use these words:
+[$usedWordsString]
+
+Example of a valid response:
+사랑:love:나는 너를 정말 사랑해.
+""".trimIndent()
 
                 val responseText = gptRepo.askGPT(prompt)
-
                 val lastLine = responseText.lines().lastOrNull { it.contains(":") } ?: responseText
                 val parts = lastLine.split(":")
 
@@ -162,13 +212,16 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     val newWord = Word(
                         korean = parts[0].trim(),
                         meaning = parts[1].trim(),
-                        example = parts.subList(2, parts.size).joinToString(":").trim()
+                        example = parts.subList(2, parts.size).joinToString(":").trim(),
+                        difficulty = difficultyEnum
                     )
 
-                    if (usedWords.contains(newWord.korean)) {
-                        showError("Could not find a new word. Please try again.")
+                    // 🔒 중복 + 영어 검증
+                    if (usedWords.contains(newWord.korean) || containsEnglish(newWord.example)) {
+                        showError("Invalid word generated. Please try again.")
                         return@launch
                     }
+
                     usedWords.add(newWord.korean)
                     currentWord = newWord
                     updateUi(newWord)
@@ -182,11 +235,19 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             }
         }
     }
+    private fun containsEnglish(text: String): Boolean {
+        return text.any { it in 'A'..'Z' || it in 'a'..'z' }
+    }
+
 
     private fun updateUi(word: Word) {
         binding.txtKorean.text = word.korean
         binding.txtMeaning.text = word.meaning
         binding.txtExample.text = word.example
+
+        // 난이도 UI 표시
+        binding.txtDifficulty.text = "난이도: ${word.difficulty.displayName}"
+        binding.txtDifficulty.setBackgroundColor(word.difficulty.color)
         updateFavoriteButtonState()
     }
 

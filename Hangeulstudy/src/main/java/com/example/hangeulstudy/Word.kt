@@ -7,5 +7,6 @@ import kotlinx.parcelize.Parcelize
 data class Word(
     val korean: String,
     val meaning: String,
-    val example: String
+    val example: String,
+    val difficulty: Difficulty = Difficulty.MEDIUM
 ) : Parcelable

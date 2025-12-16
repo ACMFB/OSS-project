@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.example.hangeulstudy.DifficultySelectActivity
 import com.example.hangeulstudy.StudyActivity
 
 class MainActivity : AppCompatActivity() {
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         //  공부하기 → 한글 학습 모듈
         btnStudy.setOnClickListener {
             startActivity(
-                Intent(this, StudyActivity::class.java)
+                Intent(this, DifficultySelectActivity::class.java)
             )
         }
 
