@@ -14,6 +14,7 @@ import java.util.Locale
 import java.util.UUID
 import android.content.Intent
 import androidx.lifecycle.lifecycleScope
+import com.example.hangeulstudy.data.FavoritesStorage
 import kotlinx.coroutines.launch
 import com.example.hangeulstudy.databinding.ActivityStudyBinding
 
@@ -70,10 +71,14 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding = ActivityStudyBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        favoriteWords.addAll(
+            FavoritesStorage.load(this)
+        )
+
         selectedDifficulty = intent.getStringExtra("difficulty")
             ?.let { Difficulty.valueOf(it) }
             ?: Difficulty.RANDOM
-        
+
         tts = TextToSpeech(this, this)
         setSpeakButtonEnabled(false)
 
@@ -97,11 +102,19 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             } else {
                 favoriteWords.add(word)
             }
+
+            FavoritesStorage.save(this, favoriteWords)
             updateFavoriteButtonState()
-            val message = if (favoriteWords.contains(word)) "Added to favorites." else "Removed from favorites."
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(
+                this,
+                if (favoriteWords.contains(word)) "Added to favorites"
+                else "Removed from favorites",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
+
 
     private fun updateFavoriteButtonState() {
         currentWord?.let { word ->

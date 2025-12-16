@@ -8,5 +8,5 @@ data class Word(
     val korean: String,
     val meaning: String,
     val example: String,
-    val difficulty: Difficulty = Difficulty.MEDIUM
+    val difficulty: Difficulty
 ) : Parcelable
