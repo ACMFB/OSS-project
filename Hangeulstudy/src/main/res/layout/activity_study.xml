@@ -60,6 +60,15 @@
                     android:src="@android:drawable/ic_media_play" />
 
                 <ImageButton
+                    android:id="@+id/btnPronounce"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Pronunciation Practice"
+                    android:src="@android:drawable/ic_btn_speak_now" />
+
+                <ImageButton
                     android:id="@+id/btnFavorite"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
