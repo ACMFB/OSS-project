@@ -25,6 +25,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".GameDetailActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.example.hangulgrid.MainActivity"
             android:theme="@style/Theme.HangulGrid" />
 
