@@ -13,8 +13,8 @@ class GameDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_detail)
 
-        val gameTitle = intent.getStringExtra("GAME_TITLE")
-        val gameDescription = intent.getStringExtra("GAME_DESCRIPTION")
+        val gameTitleResId = intent.getIntExtra("GAME_TITLE_RES_ID", 0)
+        val gameDescriptionResId = intent.getIntExtra("GAME_DESCRIPTION_RES_ID", 0)
         val gameImageResId = intent.getIntExtra("GAME_IMAGE", 0)
         val gameClass = intent.getSerializableExtra("GAME_CLASS") as Class<*>?
 
@@ -23,8 +23,12 @@ class GameDetailActivity : AppCompatActivity() {
         val tvDescription = findViewById<TextView>(R.id.tvGameDescription)
         val btnPlay = findViewById<Button>(R.id.btnPlay)
 
-        tvTitle.text = gameTitle
-        tvDescription.text = gameDescription
+        if (gameTitleResId != 0) {
+            tvTitle.setText(gameTitleResId)
+        }
+        if (gameDescriptionResId != 0) {
+            tvDescription.setText(gameDescriptionResId)
+        }
         if (gameImageResId != 0) {
             ivImage.setImageResource(gameImageResId)
         }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">韩文斗士 2025</string>
+
+    <!-- MainActivity -->
+    <string name="main_title">韩文斗士 2025</string>
+    <string name="start_game">开始游戏</string>
+    <string name="study">学习</string>
+    <string name="ranking">排行</string>
+    <string name="review">复习</string>
+
+    <!-- Language Dialog -->
+    <string name="language_setting">语言设定</string>
+
+    <!-- GameSelectActivity -->
+    <string name="game_select_title">选择游戏</string>
+    <string name="game_1_title">单词图片配对</string>
+    <string name="game_2_title">单词网格游戏</string>
+    <string name="game_3_title">单词射击游戏</string>
+
+    <!-- Game Titles for Detail Screen -->
+    <string name="title_shooting_game">射击游戏</string>
+    <string name="title_icon_word_game">图标单词游戏</string>
+    <string name="title_grid_game">韩文网格游戏</string>
+
+    <!-- Game Descriptions for Detail Screen -->
+    <string name="desc_shooting_game">击中从天上掉下来的正确单词以获得分数。</string>
+    <string name="desc_icon_word_game">匹配与所显示的图标（图片）相对应的韩文单词。</string>
+    <string name="desc_grid_game">在网格中找到并完成隐藏的韩文单词。</string>
+
+    <!-- DifficultySelectActivity -->
+    <string name="difficulty_select_title">请选择难度</string>
+    <string name="easy">简单</string>
+    <string name="medium">中等</string>
+    <string name="hard">困难</string>
+    <string name="random">随机</string>
+</resources>

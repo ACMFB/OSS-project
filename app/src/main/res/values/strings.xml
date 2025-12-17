@@ -1,29 +1,39 @@
 <resources>
-    <string name="app_name">한글파이터 2025</string>
+    <string name="app_name">Hangeul Fighter 2025</string>
 
     <!-- MainActivity -->
-    <string name="main_title">한글파이터 2025</string>
-    <string name="start_game">게임 시작</string>
-    <string name="study">공부하기</string>
-    <string name="ranking">랭킹</string>
-    <string name="review">복습하기</string>
+    <string name="main_title">Hangeul Fighter 2025</string>
+    <string name="start_game">Start Game</string>
+    <string name="study">Study</string>
+    <string name="ranking">Ranking</string>
+    <string name="review">Review</string>
 
     <!-- Language Dialog -->
-    <string name="language_setting">언어 설정</string>
+    <string name="language_setting">Language Settings</string>
     <string name="korean">한국어</string>
     <string name="english">English</string>
     <string name="chinese">中文</string>
 
     <!-- GameSelectActivity -->
-    <string name="game_select_title">게임 선택</string>
-    <string name="game_1_title">단어 그림 짝 맞추기</string>
-    <string name="game_2_title">단어 격자 게임</string>
-    <string name="game_3_title">단어 슈팅 게임</string>
+    <string name="game_select_title">Select Game</string>
+    <string name="game_1_title">Word-Image Match</string>
+    <string name="game_2_title">Word Grid Game</string>
+    <string name="game_3_title">Word Shooting Game</string>
+
+    <!-- Game Titles for Detail Screen -->
+    <string name="title_shooting_game">Shooting Game</string>
+    <string name="title_icon_word_game">Icon Word Game</string>
+    <string name="title_grid_game">Hangeul Grid Game</string>
+
+    <!-- Game Descriptions for Detail Screen -->
+    <string name="desc_shooting_game">Get points by hitting the correct words falling from the sky.</string>
+    <string name="desc_icon_word_game">Match the Korean word that corresponds to the presented icon (picture).</string>
+    <string name="desc_grid_game">Find and complete the hidden Korean words on the grid.</string>
 
     <!-- DifficultySelectActivity -->
-    <string name="difficulty_select_title">난이도를 선택하세요</string>
-    <string name="easy">쉬움</string>
-    <string name="medium">보통</string>
-    <string name="hard">어려움</string>
-    <string name="random">무작위</string>
+    <string name="difficulty_select_title">Select a difficulty</string>
+    <string name="easy">Easy</string>
+    <string name="medium">Medium</string>
+    <string name="hard">Hard</string>
+    <string name="random">Random</string>
 </resources>
