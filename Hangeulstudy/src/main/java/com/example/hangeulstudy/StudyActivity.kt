@@ -214,7 +214,17 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         DrawableCompat.setTint(drawable, color)
         binding.btnSpeak.setImageDrawable(drawable)
     }
-
+    private fun isValidForDifficulty(word: String, difficulty: Difficulty): Boolean {
+        return when (difficulty) {
+            Difficulty.EASY -> word.length <= 2
+            Difficulty.MEDIUM -> word.length in 3..4
+            Difficulty.HARD -> word.length >= 4 &&  !word.endsWith("하다") &&
+                    !word.endsWith("되다") &&
+                    !word.endsWith("있다") &&
+                    !word.endsWith("없다")
+            Difficulty.RANDOM -> true
+        }
+    }
     private fun speakOut() {
         if (!isTtsReady) {
             Toast.makeText(this, "TTS is not ready yet.", Toast.LENGTH_SHORT).show()
@@ -265,6 +275,10 @@ You MUST follow ALL rules strictly.
 
 3. Do NOT add explanations, symbols, or line breaks.
 
+For HARD difficulty:
+- Avoid common daily conversation words
+- Prefer academic, abstract, or technical vocabulary
+
 Pick ONE Korean word that matches:
 - Category: $randomCategory
 - Difficulty level: $difficultyLabel
@@ -290,6 +304,14 @@ Example of a valid response:
                         fetchNewWord()
                         return@launch
                     }
+
+                    if (selectedDifficulty != Difficulty.RANDOM &&
+                        !isValidForDifficulty(wordName, selectedDifficulty)
+                    ) {
+                        fetchNewWord()
+                        return@launch
+                    }
+
 
                     val finalDifficulty = when {
                         // 사용자가 난이도를 명시적으로 선택한 경우
