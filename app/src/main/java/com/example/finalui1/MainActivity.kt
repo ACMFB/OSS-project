@@ -1,5 +1,6 @@
 package com.example.finalui1
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -15,6 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        loadLocale() // 앱 시작 시 저장된 언어 설정 불러오기
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
@@ -69,13 +71,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun changeLocale(langCode: String) {
+        saveLocale(langCode) // 언어 변경 시 설정 저장
+
         val locale = Locale(langCode)
         Locale.setDefault(locale)
         val config = resources.configuration
         config.setLocale(locale)
         resources.updateConfiguration(config, resources.displayMetrics)
 
+        recreate() // 액티비티를 다시 시작하여 언어 변경사항을 즉시 적용
+    }
 
-        recreate()
+    private fun saveLocale(langCode: String) {
+        val prefs = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.putString("My_Lang", langCode)
+        editor.apply()
+    }
+
+    private fun loadLocale() {
+        val prefs = getSharedPreferences("Settings", Context.MODE_PRIVATE)
+        val language = prefs.getString("My_Lang", "") // 기본값은 시스템 언어
+        if (!language.isNullOrEmpty()) {
+            val locale = Locale(language)
+            Locale.setDefault(locale)
+            val config = resources.configuration
+            config.setLocale(locale)
+            resources.updateConfiguration(config, resources.displayMetrics)
+        }
     }
 }
