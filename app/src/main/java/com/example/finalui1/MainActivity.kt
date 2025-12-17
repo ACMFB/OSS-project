@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
         config.setLocale(locale)
         resources.updateConfiguration(config, resources.displayMetrics)
 
-        // 변경된 언어를 적용하기 위해 액티비티를 다시 시작합니다.
+
         recreate()
     }
 }

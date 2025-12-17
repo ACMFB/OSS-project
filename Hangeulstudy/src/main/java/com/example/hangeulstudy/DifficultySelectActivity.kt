@@ -30,7 +30,6 @@ class DifficultySelectActivity : AppCompatActivity() {
             startStudy(Difficulty.RANDOM)
         }
     }
-
     private fun startStudy(difficulty: Difficulty) {
         val intent = Intent(this, StudyActivity::class.java)
         intent.putExtra("difficulty", difficulty.name)
