@@ -16,6 +16,7 @@ import java.util.UUID
 import android.content.Intent
 import androidx.lifecycle.lifecycleScope
 import com.example.hangeulstudy.data.FavoritesStorage
+import com.example.hangeulstudy.data.DifficultyCache
 import kotlinx.coroutines.launch
 import com.example.hangeulstudy.databinding.ActivityStudyBinding
 
@@ -39,6 +40,7 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private var currentWord: Word? = null
     private val favoriteWords = mutableSetOf<Word>()
+    private lateinit var difficultyCache: MutableMap<String, Difficulty>
 
     private val favoritesActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -55,6 +57,7 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         studyMode = intent.getStringExtra("study_mode")
         favoriteWords.addAll(FavoritesStorage.load(this))
+        difficultyCache = DifficultyCache.load(this)
 
         tts = TextToSpeech(this, this)
         setSpeakButtonEnabled(false)
@@ -106,6 +109,13 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         if (favoriteWords.size < previouslyFavoritedCount) {
             // A word might have been removed
+        }
+    }
+    private fun inferDifficulty(word: String): Difficulty {
+        return when {
+            word.length <= 2 -> Difficulty.EASY
+            word.length <= 3 -> Difficulty.MEDIUM
+            else -> Difficulty.HARD
         }
     }
 
@@ -234,6 +244,14 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     selectedDifficulty
                 }
                 val difficultyLabel = difficultyEnum.label
+
+                val difficultyGuideline = when (difficultyEnum) {
+                    Difficulty.EASY -> "- Difficulty Guideline: Easy words are common in everyday conversation (e.g., 사랑, 학교, 먹다)."
+                    Difficulty.MEDIUM -> "- Difficulty Guideline: Medium words are more specific or less frequent (e.g., 소중하다, 문화, 발전)."
+                    Difficulty.HARD -> "- Difficulty Guideline: Hard words are academic, technical, or archaic (e.g., 고고학, 형이상학, 변증법)."
+                    else -> difficultyEnum // Handle RANDOM or any other case
+                }
+
                 val prompt = """You are an API that creates Korean word quizzes.
 
 You MUST follow ALL rules strictly.
@@ -244,13 +262,13 @@ You MUST follow ALL rules strictly.
 2. The KoreanExample MUST be written ONLY in Korean.
    - DO NOT include English words.
    - DO NOT mix languages.
-   - If English appears, the response is INVALID.
 
 3. Do NOT add explanations, symbols, or line breaks.
 
 Pick ONE Korean word that matches:
 - Category: $randomCategory
 - Difficulty level: $difficultyLabel
+${difficultyGuideline}
 
 Never use these words:
 [$usedWordsString]
@@ -263,24 +281,51 @@ Example of a valid response:
                 val parts = lastLine.split(":")
 
                 if (parts.size >= 3) {
-                    val newWord = Word(
-                        korean = parts[0].trim(),
-                        meaning = parts[1].trim(),
-                        example = parts.subList(2, parts.size).joinToString(":").trim(),
-                        difficulty = difficultyEnum
-                    )
+                    val wordName = parts[0].trim()
+                    val meaning = parts[1].trim()
+                    val example = parts.subList(2, parts.size).joinToString(":").trim()
 
-                    if (usedWords.contains(newWord.korean) || containsEnglish(newWord.example)) {
+                    if (usedWords.contains(wordName) || containsEnglish(example)) {
                         showError("Invalid word. Retrying...")
                         fetchNewWord()
                         return@launch
                     }
 
-                    newWord.isBookmarked = favoriteWords.any { it.korean == newWord.korean }
-                    usedWords.add(newWord.korean)
+                    val finalDifficulty = when {
+                        // 사용자가 난이도를 명시적으로 선택한 경우
+                        selectedDifficulty != Difficulty.RANDOM ->
+                            selectedDifficulty
+
+                        // RANDOM일 때만 캐시 사용
+                        difficultyCache.containsKey(wordName) ->
+                            difficultyCache[wordName]!!
+
+                        // RANDOM + 캐시 없음
+                        else ->
+                            inferDifficulty(wordName)
+                    }
+
+                    if (selectedDifficulty == Difficulty.RANDOM &&
+                        !difficultyCache.containsKey(wordName)
+                    ) {
+                        difficultyCache[wordName] = finalDifficulty
+                        DifficultyCache.save(this@StudyActivity, difficultyCache)
+                    }
+
+                    val newWord = Word(
+                        korean = wordName,
+                        meaning = meaning,
+                        example = example,
+                        difficulty = finalDifficulty
+                    )
+
+                    newWord.isBookmarked = favoriteWords.any { it.korean == wordName }
+
+                    usedWords.add(wordName)
                     currentWord = newWord
                     updateUi(newWord)
-                } else {
+                }
+                else {
                     showError("Invalid response format")
                 }
             } catch (e: Exception) {
@@ -299,10 +344,13 @@ Example of a valid response:
         binding.txtKorean.text = word.korean
         binding.txtMeaning.text = word.meaning
         binding.txtExample.text = word.example
+
         binding.txtDifficulty.text = "난이도: ${word.difficulty.displayName}"
         binding.txtDifficulty.setBackgroundColor(word.difficulty.color)
+
         updateFavoriteButtonState()
     }
+
 
     private fun showLoading(isLoading: Boolean) {
         binding.btnNext.isEnabled = !isLoading

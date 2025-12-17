@@ -1,4 +1,5 @@
 package com.example.hangeulstudy
+
 import android.graphics.Color
 
 enum class Difficulty(
@@ -10,9 +11,10 @@ enum class Difficulty(
     MEDIUM("common", "보통", Color.parseColor("#FF9800")),
     HARD("intermediate", "어려움", Color.parseColor("#F44336")),
     RANDOM("random", "무작위", Color.GRAY);
+
     companion object {
         fun fromPrompt(value: String): Difficulty {
-            return entries.firstOrNull { it.label == value } ?: MEDIUM
+            return entries.firstOrNull { it.label == value } ?: EASY
         }
     }
 }
