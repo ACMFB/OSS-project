@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Hangeulstudy</string>
+
+    <!-- DifficultySelectActivity -->
+    <string name="difficulty_select_title">选择难度</string>
+    <string name="easy">简单</string>
+    <string name="medium">中等</string>
+    <string name="hard">困难</string>
+    <string name="random">随机</string>
+
+    <!-- StudyActivity -->
+    <string name="review_no_favorites">没有要复习的收藏单词。</string>
+    <string name="review_all_words_completed">您已复习所有收藏的单词。</string>
+    <string name="added_to_favorites">已添加到收藏夹。</string>
+    <string name="removed_from_favorites">已从收藏夹中删除。</string>
+</resources>

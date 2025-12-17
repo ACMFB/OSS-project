@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/difficulty_select_title"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- 쉬움 -->
+        <Button
+            android:id="@+id/btnEasy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/easy"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_easy"
+            app:backgroundTint="@null"
+            android:minHeight="48dp"
+            android:paddingVertical="14dp"
+            android:layout_marginTop="12dp"/>
+
+        <!-- 보통 -->
+        <Button
+            android:id="@+id/btnMedium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/medium"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_medium"
+            app:backgroundTint="@null"
+            android:minHeight="48dp"
+            android:paddingVertical="14dp"
+            android:layout_marginTop="12dp"/>
+
+        <!-- 어려움 -->
+        <Button
+            android:id="@+id/btnHard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/hard"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_hard"
+            app:backgroundTint="@null"
+            android:minHeight="48dp"
+            android:paddingVertical="14dp"
+            android:layout_marginTop="12dp"/>
+
+        <!-- 무작위 -->
+        <Button
+            android:id="@+id/btnRandom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/random"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_random"
+            app:backgroundTint="@null"
+            android:minHeight="48dp"
+            android:paddingVertical="14dp"
+            android:layout_marginTop="12dp"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
