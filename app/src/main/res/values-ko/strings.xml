@@ -14,19 +14,19 @@
 
     <!-- GameSelectActivity -->
     <string name="game_select_title">게임 선택</string>
-    <string name="game_1_title">단어 그림 짝 맞추기</string>
-    <string name="game_2_title">단어 격자 게임</string>
-    <string name="game_3_title">단어 슈팅 게임</string>
+    <string name="game_1_title">아이콘 끝말잇기</string>
+    <string name="game_2_title">한글 조립 챌린지</string>
+    <string name="game_3_title">슈팅 게임</string>
 
     <!-- Game Titles for Detail Screen -->
     <string name="title_shooting_game">슈팅 게임</string>
-    <string name="title_icon_word_game">아이콘 단어 게임</string>
-    <string name="title_grid_game">한글 그리드 게임</string>
+    <string name="title_icon_word_game">아이콘 끝말잇기</string>
+    <string name="title_grid_game">한글 조립 챌린지</string>
 
     <!-- Game Descriptions for Detail Screen -->
-    <string name="desc_shooting_game">하늘에서 떨어지는 올바른 단어를 맞춰 점수를 획득하는 게임입니다.</string>
-    <string name="desc_icon_word_game">제시된 아이콘(그림)을 보고 해당하는 한글 단어를 맞추는 게임입니다.</string>
-    <string name="desc_grid_game">격자판에 숨겨진 한글 단어를 찾아 완성하는 게임입니다.</string>
+    <string name="desc_shooting_game">제시어를 보고 그에 상응하는 적을 처치해 점수를 획득하는 게임입니다.</string>
+    <string name="desc_icon_word_game">제시된 한글 단어를 보고 해당 단어의 마지막 말로 시작하는 단어의 아이콘(그림)을 맞추는 게임입니다.</string>
+    <string name="desc_grid_game">제한시간안에 제시어를 보고 키패드를 입력하여 빠르게 단어를 완성해 점수를 얻는 게임입니다</string>
 
     <!-- DifficultySelectActivity -->
     <string name="difficulty_select_title">난이도를 선택하세요</string>

@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HangulGrid</string>
+    <string name="presented_word">Word: %s</string>
+    <string name="remaining_time">Time: %d s</string>
+    <string name="score">Score: %d</string>
 </resources>

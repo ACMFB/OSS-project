@@ -32,7 +32,6 @@
                     android:id="@+id/txtDifficulty"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Difficulty: EASY"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:padding="6dp"
@@ -40,7 +39,8 @@
                     android:textColor="@android:color/white"
                     android:layout_marginBottom="8dp"
                     android:layout_marginStart="0dp"
-                    android:layout_marginEnd="12dp"/>
+                    android:layout_marginEnd="12dp"
+                    tools:text="Difficulty: EASY"/>
 
                 <TextView
                     android:id="@+id/txtKorean"
@@ -56,7 +56,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Listen"
+                    android:contentDescription="@string/listen_button_desc"
                     android:src="@android:drawable/ic_media_play" />
 
                 <ImageButton
@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Pronunciation Practice"
+                    android:contentDescription="@string/pronounce_button_desc"
                     android:src="@android:drawable/ic_btn_speak_now" />
 
                 <ImageButton
@@ -74,7 +74,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Favorite"
+                    android:contentDescription="@string/favorite_button_desc"
                     android:src="@android:drawable/btn_star_big_off" />
 
             </LinearLayout>
@@ -111,7 +111,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="12dp"
-            android:text="Next Word" />
+            android:text="@string/next_word_button" />
 
         <Button
             android:id="@+id/btnShowFavorites"
@@ -119,7 +119,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:padding="12dp"
-            android:text="My Words" />
+            android:text="@string/my_words_button" />
 
     </LinearLayout>
 

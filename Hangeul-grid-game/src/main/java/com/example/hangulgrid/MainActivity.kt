@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -134,13 +135,13 @@ fun HangulGameScreen() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("점수: $score", fontSize = 22.sp)
-            Text("남은 시간: $timeLeft 초", fontSize = 22.sp, color = if (timeLeft <= 10) Color.Red else Color.Black)
+            Text(stringResource(R.string.score, score), fontSize = 22.sp)
+            Text(stringResource(R.string.remaining_time, timeLeft), fontSize = 22.sp, color = if (timeLeft <= 10) Color.Red else Color.Black)
         }
 
         Spacer(Modifier.height(10.dp))
 
-        Text("제시어: $target", fontSize = 24.sp, color = Color(0xFF0066CC), modifier = Modifier.align(Alignment.CenterHorizontally))
+        Text(stringResource(R.string.presented_word, target), fontSize = 24.sp, color = Color(0xFF0066CC), modifier = Modifier.align(Alignment.CenterHorizontally))
         
         Spacer(Modifier.height(10.dp))
 

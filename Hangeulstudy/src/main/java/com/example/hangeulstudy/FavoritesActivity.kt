@@ -21,7 +21,7 @@ class FavoritesActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        title = "My Words"
+        title = getString(R.string.favorites_title)
 
         val initialWords = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableArrayListExtra("favoriteWords", Word::class.java)

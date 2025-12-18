@@ -14,19 +14,19 @@
 
     <!-- GameSelectActivity -->
     <string name="game_select_title">选择游戏</string>
-    <string name="game_1_title">单词图片配对</string>
-    <string name="game_2_title">单词网格游戏</string>
-    <string name="game_3_title">单词射击游戏</string>
+    <string name="game_1_title">图标接龙</string>
+    <string name="game_2_title">韩文组装挑战</string>
+    <string name="game_3_title">射击游戏</string>
 
     <!-- Game Titles for Detail Screen -->
     <string name="title_shooting_game">射击游戏</string>
-    <string name="title_icon_word_game">图标单词游戏</string>
-    <string name="title_grid_game">韩文网格游戏</string>
+    <string name="title_icon_word_game">图标接龙</string>
+    <string name="title_grid_game">韩文组装挑战</string>
 
     <!-- Game Descriptions for Detail Screen -->
-    <string name="desc_shooting_game">击中从天上掉下来的正确单词以获得分数。</string>
-    <string name="desc_icon_word_game">匹配与所显示的图标（图片）相对应的韩文单词。</string>
-    <string name="desc_grid_game">在网格中找到并完成隐藏的韩文单词。</string>
+    <string name="desc_shooting_game">看到提示词后，击败相应的敌人以获得分数的游戏。</string>
+    <string name="desc_icon_word_game">看一个韩文单词，然后猜出以该单词最后一个字母开头的单词的图标（图片）的游戏。</string>
+    <string name="desc_grid_game">在限定时间内看给定的单词，通过键盘输入快速完成单词以获得分数的游戏。</string>
 
     <!-- DifficultySelectActivity -->
     <string name="difficulty_select_title">请选择难度</string>

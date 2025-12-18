@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="presented_word">提示词: %s</string>
+    <string name="remaining_time">剩余时间: %d秒</string>
+    <string name="score">分数: %d</string>
+</resources>

@@ -1,16 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hangeulstudy</string>
+    <!-- StudyActivity -->
+    <string name="difficulty_label">Difficulty: %s</string>
+    <string name="listen_button_desc">Listen</string>
+    <string name="favorite_button_desc">Favorite</string>
+    <string name="pronounce_button_desc">Pronunciation Practice</string>
+    <string name="next_word_button">Next Word</string>
+    <string name="my_words_button">My Words</string>
+
+    <!-- Toasts and Messages -->
+    <string name="review_no_favorites">There are no bookmarked words to review.</string>
+    <string name="review_all_words_completed">You have reviewed all the words!</string>
+    <string name="added_to_favorites">Added to favorites.</string>
+    <string name="removed_from_favorites">Removed from favorites.</string>
+    <string name="tts_not_ready">TTS is not ready yet.</string>
+    <string name="generating_word">Generating...</string>
+    <string name="error_message">Error</string>
+    <string name="error_check_connection">Check internet or API key.</string>
+    <string name="permission_required">Permission to record audio is required for this feature.</string>
+    <string name="stt_not_available">STT is not available on this device.</string>
+    <string name="stt_prompt">Please say the word: %s</string>
+    <string name="stt_correct">Correct! Pronunciation: %s</string>
+    <string name="stt_try_again">Try again. (Recognized: %s)</string>
+    <string name="no_word_to_practice">Please generate a word to practice first.</string>
+
+    <!-- Difficulty Levels -->
+    <string name="easy">EASY</string>
+    <string name="medium">MEDIUM</string>
+    <string name="hard">HARD</string>
+    <string name="random">RANDOM</string>
 
     <!-- DifficultySelectActivity -->
-    <string name="difficulty_select_title">난이도를 선택하세요</string>
-    <string name="easy">쉬움</string>
-    <string name="medium">보통</string>
-    <string name="hard">어려움</string>
-    <string name="random">무작위</string>
+    <string name="difficulty_select_title">Select a difficulty</string>
 
-    <!-- StudyActivity -->
-    <string name="review_no_favorites">복습할 즐겨찾기 단어가 없습니다.</string>
-    <string name="review_all_words_completed">모든 즐겨찾기 단어를 복습했습니다.</string>
-    <string name="added_to_favorites">즐겨찾기에 추가되었습니다.</string>
-    <string name="removed_from_favorites">즐겨찾기에서 제거되었습니다.</string>
+    <!-- FavoritesActivity -->
+    <string name="favorites_title">My Word List</string>
+    <string name="no_favorites_message">No favorite words yet.</string>
+
 </resources>

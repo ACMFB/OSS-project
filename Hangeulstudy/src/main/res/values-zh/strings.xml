@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- StudyActivity -->
+    <string name="difficulty_label">难度: %s</string>
+    <string name="listen_button_desc">听</string>
+    <string name="favorite_button_desc">收藏</string>
+    <string name="pronounce_button_desc">发音练习</string>
+    <string name="next_word_button">下一个单词</string>
+    <string name="my_words_button">我的单词</string>
+
+    <!-- Toasts and Messages -->
+    <string name="review_no_favorites">没有已收藏的单词可供复习。</string>
+    <string name="review_all_words_completed">您已复习完所有单词！</string>
+    <string name="added_to_favorites">已添加到收藏夹。</string>
+    <string name="removed_from_favorites">已从收藏夹中删除。</string>
+    <string name="tts_not_ready">TTS 尚未准备好。</string>
+    <string name="generating_word">正在生成...</string>
+    <string name="error_message">错误</string>
+    <string name="error_check_connection">请检查您的网络连接或 API 密钥。</string>
+    <string name="permission_required">此功能需要录音权限。</string>
+    <string name="stt_not_available">此设备不支持 STT。</string>
+    <string name="stt_prompt">请说出单词: %s</string>
+    <string name="stt_correct">正确！发音: %s</string>
+    <string name="stt_try_again">请重试。(识别为: %s)</string>
+    <string name="no_word_to_practice">请先生成一个要练习的单词。</string>
+
+    <!-- Difficulty Levels -->
+    <string name="easy">简单</string>
+    <string name="medium">中等</string>
+    <string name="hard">困难</string>
+    <string name="random">随机</string>
+
+    <!-- DifficultySelectActivity -->
+    <string name="difficulty_select_title">请选择难度</string>
+
+    <!-- FavoritesActivity -->
+    <string name="favorites_title">我的单词</string>
+    <string name="no_favorites_message">还没有收藏的单词。</string>
+
+</resources>

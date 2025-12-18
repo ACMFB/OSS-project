@@ -16,19 +16,19 @@
 
     <!-- GameSelectActivity -->
     <string name="game_select_title">Select Game</string>
-    <string name="game_1_title">Word-Image Match</string>
-    <string name="game_2_title">Word Grid Game</string>
-    <string name="game_3_title">Word Shooting Game</string>
+    <string name="game_1_title">Icon Word Chain</string>
+    <string name="game_2_title">Hangeul Assembly Challenge</string>
+    <string name="game_3_title">Shooting Game</string>
 
     <!-- Game Titles for Detail Screen -->
     <string name="title_shooting_game">Shooting Game</string>
-    <string name="title_icon_word_game">Icon Word Game</string>
-    <string name="title_grid_game">Hangeul Grid Game</string>
+    <string name="title_icon_word_game">Icon Word Chain</string>
+    <string name="title_grid_game">Hangeul Assembly Challenge</string>
 
     <!-- Game Descriptions for Detail Screen -->
-    <string name="desc_shooting_game">Get points by hitting the correct words falling from the sky.</string>
-    <string name="desc_icon_word_game">Match the Korean word that corresponds to the presented icon (picture).</string>
-    <string name="desc_grid_game">Find and complete the hidden Korean words on the grid.</string>
+    <string name="desc_shooting_game">A game where you score points by defeating the corresponding enemy after seeing the suggested word.</string>
+    <string name="desc_icon_word_game">A game where you see a Korean word and match the icon (picture) of a word that starts with the last letter of the given word.</string>
+    <string name="desc_grid_game">A game where you get points by quickly completing words by typing on the keypad based on the given word within a time limit.</string>
 
     <!-- DifficultySelectActivity -->
     <string name="difficulty_select_title">Select a difficulty</string>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="presented_word">제시어: %s</string>
+    <string name="remaining_time">남은 시간: %d초</string>
+    <string name="score">점수: %d</string>
+</resources>

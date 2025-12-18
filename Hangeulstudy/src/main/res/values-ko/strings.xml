@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- StudyActivity -->
+    <string name="difficulty_label">난이도: %s</string>
+    <string name="listen_button_desc">듣기</string>
+    <string name="favorite_button_desc">즐겨찾기</string>
+    <string name="pronounce_button_desc">발음 연습</string>
+    <string name="next_word_button">다음 단어</string>
+    <string name="my_words_button">내 단어장</string>
+
+    <!-- Toasts and Messages -->
+    <string name="review_no_favorites">복습할 즐겨찾기 단어가 없습니다.</string>
+    <string name="review_all_words_completed">모든 단어를 복습했습니다!</string>
+    <string name="added_to_favorites">즐겨찾기에 추가되었습니다.</string>
+    <string name="removed_from_favorites">즐겨찾기에서 삭제되었습니다.</string>
+    <string name="tts_not_ready">TTS가 아직 준비되지 않았습니다.</string>
+    <string name="generating_word">생성 중...</string>
+    <string name="error_message">오류</string>
+    <string name="error_check_connection">인터넷 연결 또는 API 키를 확인하세요.</string>
+    <string name="permission_required">이 기능을 사용하려면 음성 녹음 권한이 필요합니다.</string>
+    <string name="stt_not_available">이 기기에서는 STT를 사용할 수 없습니다.</string>
+    <string name="stt_prompt">단어를 발음하세요: %s</string>
+    <string name="stt_correct">정확합니다! 발음: %s</string>
+    <string name="stt_try_again">다시 시도해 보세요. (인식된 발음: %s)</string>
+    <string name="no_word_to_practice">먼저 학습할 단어를 생성해주세요.</string>
+
+    <!-- Difficulty Levels -->
+    <string name="easy">쉬움</string>
+    <string name="medium">보통</string>
+    <string name="hard">어려움</string>
+    <string name="random">무작위</string>
+
+    <!-- DifficultySelectActivity -->
+    <string name="difficulty_select_title">난이도를 선택하세요</string>
+
+    <!-- FavoritesActivity -->
+    <string name="favorites_title">내 단어장</string>
+    <string name="no_favorites_message">아직 즐겨찾기한 단어가 없습니다.</string>
+
+</resources>

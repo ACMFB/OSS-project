@@ -16,7 +16,7 @@
 
     <!-- GameSelectActivity -->
     <string name="game_select_title">Select Game</string>
-    <string name="game_1_title">Icon Word Matching Game</string>
-    <string name="game_2_title">Hangul Grid Game</string>
-    <string name="game_3_title">Word Shooting Game</string>
+    <string name="game_1_title">Icon Word Chain</string>
+    <string name="game_2_title">Hangeul Assembly Challenge</string>
+    <string name="game_3_title">Shooting Game</string>
 </resources>

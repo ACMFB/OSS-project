@@ -4,21 +4,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5"
+    android:padding="16dp"
     tools:context=".FavoritesActivity">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="My Words"
+        android:text="@string/favorites_title"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:padding="16dp" />
+        android:gravity="center"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/txtEmpty"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/item_word" />
+        android:text="@string/no_favorites_message"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:visibility="gone"/>
 
 </LinearLayout>
