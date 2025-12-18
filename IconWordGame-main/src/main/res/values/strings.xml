@@ -1,3 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">IconWordGame</string>
+    <string name="current_word">Current Word</string>
+    <string name="score">Score: %d</string>
+    <string name="enter_word_hint">Enter a word</string>
+    <string name="start_game_button">Start Game</string>
+    <string name="submit_button">Submit</string>
+    <string name="please_enter_word">Please enter a word!</string>
+    <string name="incorrect_answer">Incorrect!</string>
 </resources>

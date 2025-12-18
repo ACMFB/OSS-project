@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +49,7 @@ fun IconWordGameScreen() {
 
     fun checkWord() {
         if (userInput.isBlank()) {
-            Toast.makeText(context, "단어를 입력하세요!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.please_enter_word), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -60,7 +61,7 @@ fun IconWordGameScreen() {
             currentWord = userInput
             userInput = ""
         } else {
-            Toast.makeText(context, "틀렸습니다!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.incorrect_answer), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -74,7 +75,7 @@ fun IconWordGameScreen() {
     ) {
 
         Text(
-            text = "현재 단어",
+            text = stringResource(R.string.current_word),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
@@ -86,7 +87,7 @@ fun IconWordGameScreen() {
         )
 
         Text(
-            text = "점수: $score",
+            text = stringResource(R.string.score, score),
             fontSize = 20.sp,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -94,7 +95,7 @@ fun IconWordGameScreen() {
         OutlinedTextField(
             value = userInput,
             onValueChange = { userInput = it },
-            label = { Text("단어 입력") },
+            label = { Text(stringResource(R.string.enter_word_hint)) },
             singleLine = true
         )
 
@@ -102,13 +103,13 @@ fun IconWordGameScreen() {
 
         Row {
             Button(onClick = { startGame() } ) {
-                Text("게임 시작")
+                Text(stringResource(R.string.start_game_button))
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Button(onClick = { checkWord() } ) {
-                Text("확인")
+                Text(stringResource(R.string.submit_button))
             }
         }
     }

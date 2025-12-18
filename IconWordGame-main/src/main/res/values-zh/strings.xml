@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="current_word">当前单词</string>
+    <string name="score">分数: %d</string>
+    <string name="enter_word_hint">输入单词</string>
+    <string name="start_game_button">开始游戏</string>
+    <string name="submit_button">确认</string>
+    <string name="please_enter_word">请输入单词！</string>
+    <string name="incorrect_answer">错了！</string>
+</resources>
