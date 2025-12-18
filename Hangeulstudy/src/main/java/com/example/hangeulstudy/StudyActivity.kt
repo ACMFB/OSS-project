@@ -187,7 +187,6 @@ class StudyActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun setupReviewMode() {
-        binding.btnShowFavorites.visibility = android.view.View.GONE
         reviewWords.addAll(favoriteWords)
         reviewWords.shuffle()
         fetchNextReviewWord()
